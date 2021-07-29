@@ -28,13 +28,22 @@ def weightedAdjacencyMatrix(df, N):
             matrix[j][i] = matrix[i][j]
     return matrix
 
-def diagonalDegreeMatrix(df, N):
-    wam = weightedAdjacencyMatrix(df, N)
+def diagonalDegreeMatrix(df, N, W=None):
+    if (W is None):
+        W = weightedAdjacencyMatrix(df, N)
     matrix = np.zeros((N,N))
     for i in range(N):
-        matrix[i][i] = np.sum(wam[i])
+        matrix[i][i] = np.sum(W[i])
         matrix[i][i] = 1/(np.sqrt(matrix[i][i]))
     return matrix
+
+def laplacianNorm(df, N):
+    W = weightedAdjacencyMatrix(df, N)
+    DMinusHalf = diagonalDegreeMatrix(df, N, W)
+    I = np.eye(N)
+    matrix = I - (DMinusHalf @ W @ DMinusHalf)
+    return matrix
+    
 
 def main():
     #Check if we have the right amount of args
@@ -56,7 +65,7 @@ def main():
     elif goal=="ddg":
         printMatrix(diagonalDegreeMatrix(df,df.shape[0]))
     elif goal=="lnorm":
-        pass
+        printMatrix(laplacianNorm(df, df.shape[0]))
     elif goal=="jacobi":
         pass
     else:

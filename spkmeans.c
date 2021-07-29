@@ -202,7 +202,7 @@ double** matrixMultiplication(double** a, double** b){
         for(j = 0; j < numOfVectors; j++){    
             mul[i][j]=0;    
             for(k = 0; k < numOfVectors; k++){    
-                mul[i][j]+=a[i][k]*b[k][j];    
+                mul[i][j] += a[i][k] * b[k][j];    
             }    
         }    
     } 
@@ -342,23 +342,8 @@ double calcS(double t, double c){
     return t*c;
 }
 
-double** createRotationMatrixP(double** A){
+double** createRotationMatrixP(double** P, double** A, int maxRow, int maxCol, double c, double s){
     int i;
-    int* maxValInd = maxOffDiagonalValue(A);
-    int maxRow = maxValInd[0];
-    int maxCol = maxValInd[1];
-    double theta = calcTheta(maxRow, maxCol);
-    double t = calcT(theta);
-    double c = calcC(t);
-    double s = calcS(t, c);
-
-    double** P = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(P != NULL);
-    for (i = 0; i < numOfVectors; i++) {
-        P[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(P[i] != NULL);
-    }
-
     for (i = 0; i < numOfVectors; i++) {
         P[i][i] = 1;
     }
@@ -414,16 +399,28 @@ double** jacobi(){
     int* maxValInd;
     int i, maxRow, maxCol;
     double theta, t, c, s;
-    double** A;
+    double **A, **APrime, **P, **V;
 
-    double** APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    A = laplacianNorm();
+
+    APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     assert(APrime != NULL);
+    P = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(P != NULL);
+    V = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(V != NULL);
     for (i = 0; i < numOfVectors; i++) {
         APrime[i] = (double *)calloc(numOfVectors, sizeof(double));
         assert(APrime[i] != NULL);
+        P[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(P[i] != NULL);
+        V[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(V[i] != NULL);
+    }
+    for (i = 0; i < numOfVectors; i++) {
+        V[i][i] = 1;
     }
 
-    A = laplacianNorm();
     do {
         maxValInd = maxOffDiagonalValue(A);
         maxRow = maxValInd[0];
@@ -433,6 +430,8 @@ double** jacobi(){
         c = calcC(t);
         s = calcS(t, c);
 
+        P = createRotationMatrixP(P, A, maxRow, maxCol, c, s);
+        V = matrixMultiplication(V, P);
         updateAPrime(A, APrime, maxRow, maxCol, c, s);
         isConverged = checkConvergence(A, APrime);
         A = APrime;
@@ -510,7 +509,7 @@ int main(int argc, char *argv[]) {
         printMatrix(laplacianNorm());
     } 
     else if (strcmp(goal,"jacobi")==0){
-        printf("d");
+        printMatrix(jacobi());
     } 
     else{
         assert(0==1); /*If the goal is unknown*/

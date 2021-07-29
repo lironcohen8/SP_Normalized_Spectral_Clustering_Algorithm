@@ -393,7 +393,28 @@ int checkConvergence(double** A, double** APrime){
     return 0;
 }
 
-double** jacobi(){
+void printJacobi(double **A, double **V) {
+    int i,j;
+    for (i = 0; i < numOfVectors; i++) {
+        printf("%.4f", A[i][i]); /*Format the floats precision to 4 digits*/
+            if (i < numOfVectors - 1) {
+                printf(",");
+            }
+        printf("\n");
+    }
+    for (i = 0; i < numOfVectors; i++) {
+        for (j = 0; j < numOfVectors; j++) {
+            printf("%.4f", V[j][i]); /*Transpose V, Format the floats precision to 4 digits*/
+            if (j < numOfVectors - 1) {
+                printf(",");
+            }
+        }
+        printf("\n");
+    }
+    
+}
+
+double** jacobi(int toPrint){
     int count = 0;
     int isConverged = 0;
     int* maxValInd;
@@ -439,8 +460,17 @@ double** jacobi(){
     }
     while ((isConverged==0)&&(count<100));
 
-    return A;
+    if (toPrint==0) {
+        return eigengapHeuristic(A);
+    }
+    else {
+        printJacobi(A, V);
+    }
 }  
+
+int eigengapHeuristic(double **A){
+    
+}
 
 void printMatrix(double** mat) {
     /*Prints a matrix*/
@@ -455,7 +485,6 @@ void printMatrix(double** mat) {
         printf("\n");
     }
 }
-
 
 
 void printVectors() {
@@ -509,7 +538,7 @@ int main(int argc, char *argv[]) {
         printMatrix(laplacianNorm());
     } 
     else if (strcmp(goal,"jacobi")==0){
-        printMatrix(jacobi());
+        jacobi(1);
     } 
     else{
         assert(0==1); /*If the goal is unknown*/

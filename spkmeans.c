@@ -6,6 +6,7 @@
 
 int k, max_iter, dimension, numOfVectors = 0, changes = 1;
 float rawK, rawMaxIter;
+double *eigenVals, *eigenGaps;
 double **vectors, **centroids, **wam, **ddg, **lnorm;
 int **clusters, *clustersSizes;
 
@@ -468,8 +469,54 @@ double** jacobi(int toPrint){
     }
 }  
 
-int eigengapHeuristic(double **A){
-    
+void swap(int *a, int *b) { /*This code was taken from www.programiz.com*/
+  int s = *a;
+  *a = *b;
+  *b = s;
+}
+
+int partition(int array[], int low, int high) { /*This code was taken from www.programiz.com*/
+  int pivot = array[high];
+  int i = (low - 1);
+  for (int j = low; j < high; j++) {
+    if (array[j] <= pivot) {
+      i++;
+      swap(&array[i], &array[j]);
+    }
+  }
+  swap(&array[i + 1], &array[high]);
+  return (i + 1);
+}
+
+void quickSort(int array[], int low, int high) { /*This code was taken from www.programiz.com*/
+  if (low < high) {
+    int pi = partition(array, low, high);
+    quickSort(array, low, pi - 1);
+    quickSort(array, pi + 1, high);
+  }
+}
+
+int eigengapHeuristic(){
+    int i, limit, maxGap, k;
+    double **A;
+    eigenVals = (double *)calloc(numOfVectors, sizeof(double));
+    A = jacobi(0);
+    for (i = 0; i < numOfVectors; i++) {
+        eigenVals[i] = A[i][i];
+    }
+    quicksort(eigenVals);
+    eigenGaps = (double *)calloc(numOfVectors - 1, sizeof(double));
+    for (i = 0; i < numOfVectors - 1; i++) {
+        eigenGaps[i] = abs(eigenVals[i]-eigenVals[i+1]);
+    }
+    limit = floor(numOfVectors / 2);
+    for (i = 0; i < limit; i++) {
+        if (eigenGaps[i] > maxGap) {
+            maxGap = eigenGaps[i];
+            k = i;
+        }
+    }
+    return k + 1;
 }
 
 void printMatrix(double** mat) {
@@ -526,7 +573,9 @@ int main(int argc, char *argv[]) {
     goal = argv[2];
 
     if (strcmp(goal,"spk")==0){
-        printf("d");
+        if (k==0) {
+            k = eigengapHeuristic();
+        }
     } 
     else if (strcmp(goal,"wam")==0){
         printMatrix(weightedAdjacencyMatrix());

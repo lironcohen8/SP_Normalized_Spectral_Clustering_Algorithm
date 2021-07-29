@@ -2,11 +2,11 @@
 #include <Python.h>
 #include <stdio.h>
 #include <assert.h>
-
+#include <math.h>
 
 int k, max_iter, dimension, numOfVectors = 0, changes = 1;
 float rawK, rawMaxIter;
-double **vectors, **centroids;
+double **vectors, **centroids, **wam, **ddg, **lnorm;
 int **clusters, *clustersSizes;
 
 void *calloc(size_t nitems, size_t size);
@@ -186,6 +186,132 @@ void printResult() {
     }
 }
 
+
+
+double** matrixMultiplication(double** a, double** b){
+    int i,j,k;
+    double** mul = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(mul != NULL);
+    for (i = 0; i < numOfVectors; i++) {
+        mul[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(mul[i] != NULL);
+    }
+
+    for(i = 0; i < numOfVectors; i++){    
+        for(j = 0; j < numOfVectors; j++){    
+            mul[i][j]=0;    
+            for(k = 0; k < numOfVectors; k++){    
+                mul[i][j]+=a[i][k]*b[k][j];    
+            }    
+        }    
+    } 
+    return mul;   
+}
+
+double calcWeightsForAdjacencyMatrix(double *vector1, double *vector2){
+    double dis = 0;
+    int i;
+    for (i = 0; i < dimension; i++) { /*'''Claculates the euclidean distance between two vectors*/
+        dis += pow(vector1[i]-vector2[i],2);
+    }
+    dis = sqrt(dis);
+    dis = -0.5*dis;
+    return exp(dis);
+}
+    
+
+double** weightedAdjacencyMatrix(){
+    int i, j;
+
+    wam = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(wam != NULL);
+    for (i = 0; i < numOfVectors; i++) {
+        wam[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(wam[i] != NULL);
+    }
+
+    for (i = 0; i < numOfVectors; i++){
+        double* vector1 = vectors[i];
+        for (j = i+1; j < numOfVectors; j++){
+            double* vector2 = vectors[j];
+            wam[i][j] = calcWeightsForAdjacencyMatrix(vector1, vector2);
+            wam[j][i] = wam[i][j];
+        }
+    }
+
+    return wam;
+}
+    
+
+double** diagonalDegreeMatrix(int calcWam){
+    int i,j;
+
+    if (calcWam==1){
+        wam = weightedAdjacencyMatrix();
+    }
+
+    ddg = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(ddg != NULL);
+    for (i = 0; i < numOfVectors; i++) {
+        ddg[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(ddg[i] != NULL);
+    }
+
+    for (i = 0; i < numOfVectors; i++) {
+        int sum = 0;
+        for (j = 0; j < numOfVectors; j++){
+            sum += wam[i][j];
+        }
+        ddg[i][i] = sum;
+        ddg[i][i] = 1/(sqrt(ddg[i][i]));
+    }
+        
+    return ddg;
+}
+    
+
+double** laplacianNorm(){
+    int i,j;
+
+    wam = weightedAdjacencyMatrix();
+    ddg = diagonalDegreeMatrix(0);
+
+    lnorm = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(lnorm != NULL);
+    for (i = 0; i < numOfVectors; i++) {
+        lnorm[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(lnorm[i] != NULL);
+    }
+
+    lnorm =  matrixMultiplication(matrixMultiplication(ddg, wam),ddg);
+
+    for (i = 0; i < numOfVectors; i++){
+        for (j = 0; j < numOfVectors; j++){
+            if (i==j){
+                lnorm[i][j] = 1-lnorm[i][j];
+            }
+            else{
+                lnorm[i][j] = (-1)*lnorm[i][j];
+            }
+
+        }
+    }
+    return lnorm;
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
 int main(int argc, char *argv[]) {
     int counter = 1;
     assert(argc == 3 || argc == 2); /*Checks if we have the right amount of args*/
@@ -290,7 +416,6 @@ static PyMethodDef kmeansMethods[] = {
     PyDoc_STR("Kmeans")},
     {NULL, NULL, 0, NULL}
 };
-
 
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,

@@ -1,5 +1,5 @@
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
+/*#include <Python.h>*/
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
@@ -15,6 +15,7 @@ void *realloc(void *ptr, size_t size);
 void free(void *ptr);
 char *strtok(char * str, const char *delim);
 double atof(const char * str);
+int strcmp (const char* str1, const char* str2);
 
 
 int calcDimension(char buffer[]) {
@@ -36,7 +37,7 @@ int calcDimension(char buffer[]) {
     return dimension+1;
 }
 
-void readFile() {
+void readFile(FILE *file) {
     /*Reading the input file and put the data into the 'vectors' list*/
     int j, sizeFull = 1;
     char *vectorStr, buffer[1000];
@@ -45,7 +46,7 @@ void readFile() {
     assert(vectorStr != NULL);
     vectors = (double **)malloc(1 * sizeof(*vectors));
     assert(vectors != NULL);
-    fgets(buffer,1000,stdin);
+    fgets(buffer,1000,file);
     dimension = calcDimension(buffer);
     do {
         if (numOfVectors == sizeFull) {
@@ -64,7 +65,7 @@ void readFile() {
         }
         numOfVectors++;
     }
-    while (fgets(buffer,1000,stdin) != NULL);
+    while (fgets(buffer,1000,file) != NULL);
     free(vectorStr);
 }
 
@@ -216,9 +217,9 @@ double calcWeightsForAdjacencyMatrix(double *vector1, double *vector2){
     }
     dis = sqrt(dis);
     dis = -0.5*dis;
-    return exp(dis);
-}
     
+    return exp(dis);
+} 
 
 double** weightedAdjacencyMatrix(){
     int i, j;
@@ -241,7 +242,6 @@ double** weightedAdjacencyMatrix(){
 
     return wam;
 }
-    
 
 double** diagonalDegreeMatrix(int calcWam){
     int i,j;
@@ -258,17 +258,15 @@ double** diagonalDegreeMatrix(int calcWam){
     }
 
     for (i = 0; i < numOfVectors; i++) {
-        int sum = 0;
+        double sum = 0;
         for (j = 0; j < numOfVectors; j++){
             sum += wam[i][j];
         }
-        ddg[i][i] = sum;
-        ddg[i][i] = 1/(sqrt(ddg[i][i]));
+        ddg[i][i] = 1/(sqrt(sum));
     }
         
     return ddg;
-}
-    
+} 
 
 double** laplacianNorm(){
     int i,j;
@@ -299,9 +297,33 @@ double** laplacianNorm(){
     return lnorm;
 }
     
+void printMatrix(double** mat) {
+    /*Prints a matrix*/
+    int i, j;
+    for (i = 0; i < numOfVectors; i++) {
+        for (j = 0; j < numOfVectors; j++) {
+            printf("%.4f", mat[i][j]); /*Format the floats precision to 4 digits*/
+            if (j < numOfVectors - 1) {
+                printf(",");
+            }
+        }
+        printf("\n");
+    }
+}
 
-
-
+void printVectors() {
+    /*Prints the centroids*/
+    int i, j;
+    for (i = 0; i < numOfVectors; i++) {
+        for (j = 0; j < dimension; j++) {
+            printf("%.4f", vectors[i][j]); /*Format the floats precision to 4 digits*/
+            if (j < dimension - 1) {
+                printf(",");
+            }
+        }
+        printf("\n");
+    }
+}
 
 
 
@@ -313,18 +335,54 @@ double** laplacianNorm(){
 
 
 int main(int argc, char *argv[]) {
+    FILE *file;
+    char *goal;
+
+    assert(argc == 4); /*Checks if we have the right amount of args*/ 
+    
+    assert(sscanf(argv[1], "%f", &rawK) == 1);
+    k = (int)rawK;
+    assert(rawK - k == 0 && k >= 0); /*checks if k is a non-negative int*/
+    
+    file = fopen(argv[3],"r");
+    readFile(file);
+
+    goal = argv[2];
+
+    if (strcmp(goal,"spk")==0){
+        printf("d");
+    } 
+    else if (strcmp(goal,"wam")==0){
+        printMatrix(weightedAdjacencyMatrix());
+    } 
+    else if (strcmp(goal,"ddg")==0){
+        printMatrix(diagonalDegreeMatrix(1));
+    } 
+    else if (strcmp(goal,"lnorm")==0){
+        printMatrix(laplacianNorm());
+    } 
+    else if (strcmp(goal,"jacobi")==0){
+        printf("d");
+    } 
+    else{
+        assert(0==1); /*If the goal is unknown*/
+    }
+        
+
+
+    /*
     int counter = 1;
-    assert(argc == 3 || argc == 2); /*Checks if we have the right amount of args*/
+    assert(argc == 3 || argc == 2); 
 
     assert(sscanf(argv[1], "%f", &rawK) == 1);
     k = (int)rawK;
-    assert(rawK - k == 0 && k > 0); /*checks if k is a positive int*/
-
+    assert(rawK - k == 0 && k > 0); 
+    
     max_iter = 200;
     if (argc == 3) {
         assert(sscanf(argv[2], "%f", &rawMaxIter) == 1);
         max_iter = (int)rawMaxIter;
-        assert(rawMaxIter - max_iter == 0 && max_iter > 0); /*checks if max_iter is a positive int*/
+        assert(rawMaxIter - max_iter == 0 && max_iter > 0); 
     }
     
     readFile();
@@ -343,11 +401,11 @@ int main(int argc, char *argv[]) {
     free(centroids);
     free(clusters);
     free(clustersSizes);
-    
+    */
     return 0;
 }
 
-
+/*
 static PyObject* fit(PyObject *self, PyObject *args){
     int i, j;
     int counter = 1;
@@ -435,3 +493,4 @@ PyInit_mykmeanssp(void)
     }
     return m;
 }
+*/

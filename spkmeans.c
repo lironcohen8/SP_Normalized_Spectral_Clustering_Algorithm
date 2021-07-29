@@ -243,7 +243,7 @@ double** weightedAdjacencyMatrix(){
     return wam;
 }
 
-double** diagonalDegreeMatrix(int calcWam){
+double** diagonalDegreeMatrix(int calcWam, int toPrint){
     int i,j;
 
     if (calcWam==1){
@@ -262,7 +262,13 @@ double** diagonalDegreeMatrix(int calcWam){
         for (j = 0; j < numOfVectors; j++){
             sum += wam[i][j];
         }
-        ddg[i][i] = 1/(sqrt(sum));
+
+        if (toPrint==1){
+            ddg[i][i] = sum;
+        }
+        else{
+            ddg[i][i] = 1/sqrt(sum);
+        }  
     }
         
     return ddg;
@@ -272,7 +278,7 @@ double** laplacianNorm(){
     int i,j;
 
     wam = weightedAdjacencyMatrix();
-    ddg = diagonalDegreeMatrix(0);
+    ddg = diagonalDegreeMatrix(0,0);
 
     lnorm = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     assert(lnorm != NULL);
@@ -296,7 +302,147 @@ double** laplacianNorm(){
     }
     return lnorm;
 }
+
+int* maxOffDiagonalValue(double** mat){
+    int i,j;
+    int maxRow = 0;
+    int maxCol = 1;
+    int* res;
+
+    for (i = 0; i < numOfVectors; i++){
+        for (j = i+1; j < numOfVectors; j++){
+            if (abs(mat[i][j])>abs(mat[maxRow][maxCol])){
+                maxRow = i;
+                maxCol = j;
+            }
+        }
+    }
     
+    res = malloc(2*sizeof(int));
+    res[0] = maxRow;
+    res[1] = maxCol;
+    return res;
+}
+
+double calcTheta(int i, int j){
+    return (lnorm[j][j]-lnorm[i][i])/(2*lnorm[i][j]);
+}
+
+double calcT(double theta){
+    int sign = theta < 0 ? -1 : 1;
+    double denom = abs(theta)+sqrt(pow(theta,2)+1);
+    return sign/denom;
+}
+
+double calcC(double t){
+    return 1 / (sqrt(pow(t,2)+1));
+}
+
+double calcS(double t, double c){
+    return t*c;
+}
+
+double** createRotationMatrixP(double** A){
+    int i;
+    int* maxValInd = maxOffDiagonalValue(A);
+    int maxRow = maxValInd[0];
+    int maxCol = maxValInd[1];
+    double theta = calcTheta(maxRow, maxCol);
+    double t = calcT(theta);
+    double c = calcC(t);
+    double s = calcS(t, c);
+
+    double** P = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(P != NULL);
+    for (i = 0; i < numOfVectors; i++) {
+        P[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(P[i] != NULL);
+    }
+
+    for (i = 0; i < numOfVectors; i++) {
+        P[i][i] = 1;
+    }
+    P[maxRow][maxRow] = c;
+    P[maxCol][maxCol] = c;
+    P[maxRow][maxCol] = s;
+    P[maxCol][maxRow] = (-1)*s;
+
+    return P;
+}
+
+void updateAPrime(double** A, double** APrime, int i, int j, double c, double s){
+    int r;
+    for (r = 0; r < numOfVectors; r++){
+        if ((r!=i) && (r!=j)){
+            APrime[r][i] = c*A[r][i]-s*A[r][j];
+            APrime[r][j] = c*A[r][j]+s*A[r][i];
+        }
+    }
+    APrime[i][i] = pow(c,2)*A[i][i]+pow(s,2)*A[j][j]-2*s*c*A[i][j];
+    APrime[j][j] = pow(s,2)*A[i][i]+pow(c,2)*A[j][j]+2*s*c*A[i][j];
+    APrime[i][j] = 0;
+    APrime[j][i] = 0;
+}
+
+double calcOffSquared(double** mat){
+    int i,j;
+    double sum;
+    for (i = 0; i < numOfVectors; i++){
+        for (j = 0; j < numOfVectors; j++){
+            if (i!=j){
+                sum += pow(mat[i][j],2);
+            }
+        }
+    }
+    return sum;
+}
+
+int checkConvergence(double** A, double** APrime){
+    double epsilon = 0.001;
+    double a = calcOffSquared(A);
+    double ap = calcOffSquared(APrime);
+
+    if ((a-ap)<=epsilon){
+        return 1;
+    }
+    return 0;
+}
+
+double** jacobi(){
+    int count = 0;
+    int isConverged = 0;
+    int* maxValInd;
+    int i, maxRow, maxCol;
+    double theta, t, c, s;
+    double** A;
+
+    double** APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(APrime != NULL);
+    for (i = 0; i < numOfVectors; i++) {
+        APrime[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(APrime[i] != NULL);
+    }
+
+    A = laplacianNorm();
+    do {
+        maxValInd = maxOffDiagonalValue(A);
+        maxRow = maxValInd[0];
+        maxCol = maxValInd[1];
+        theta = calcTheta(maxRow, maxCol);
+        t = calcT(theta);
+        c = calcC(t);
+        s = calcS(t, c);
+
+        updateAPrime(A, APrime, maxRow, maxCol, c, s);
+        isConverged = checkConvergence(A, APrime);
+        A = APrime;
+        count++;
+    }
+    while ((isConverged==0)&&(count<100));
+
+    return A;
+}  
+
 void printMatrix(double** mat) {
     /*Prints a matrix*/
     int i, j;
@@ -310,6 +456,8 @@ void printMatrix(double** mat) {
         printf("\n");
     }
 }
+
+
 
 void printVectors() {
     /*Prints the centroids*/
@@ -356,7 +504,7 @@ int main(int argc, char *argv[]) {
         printMatrix(weightedAdjacencyMatrix());
     } 
     else if (strcmp(goal,"ddg")==0){
-        printMatrix(diagonalDegreeMatrix(1));
+        printMatrix(diagonalDegreeMatrix(1,1));
     } 
     else if (strcmp(goal,"lnorm")==0){
         printMatrix(laplacianNorm());

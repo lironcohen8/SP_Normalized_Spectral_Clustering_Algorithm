@@ -469,13 +469,15 @@ double** jacobi(int toPrint){
     }
 }  
 
-void swap(int *a, int *b) { /*This code was taken from www.programiz.com*/
+void swap(int *a, int *b) { 
+  /*This code was taken from www.programiz.com*/
   int s = *a;
   *a = *b;
   *b = s;
 }
 
-int partition(int array[], int low, int high) { /*This code was taken from www.programiz.com*/
+int partition(int array[], int low, int high) { 
+  /*This code was taken from www.programiz.com*/
   int pivot = array[high];
   int i = (low - 1);
   for (int j = low; j < high; j++) {
@@ -488,7 +490,8 @@ int partition(int array[], int low, int high) { /*This code was taken from www.p
   return (i + 1);
 }
 
-void quickSort(int array[], int low, int high) { /*This code was taken from www.programiz.com*/
+void quickSort(int array[], int low, int high) { 
+  /*This code was taken from www.programiz.com*/
   if (low < high) {
     int pi = partition(array, low, high);
     quickSort(array, low, pi - 1);
@@ -532,7 +535,6 @@ void printMatrix(double** mat) {
         printf("\n");
     }
 }
-
 
 void printVectors() {
     /*Prints the centroids*/

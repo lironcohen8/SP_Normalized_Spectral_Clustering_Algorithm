@@ -191,6 +191,7 @@ void printResult() {
 
 
 double** matrixMultiplication(double** a, double** b){
+    /*gets two matrixes and multiplies them*/
     int i,j,k;
     double** mul = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     assert(mul != NULL);
@@ -202,8 +203,9 @@ double** matrixMultiplication(double** a, double** b){
     for(i = 0; i < numOfVectors; i++){    
         for(j = 0; j < numOfVectors; j++){    
             mul[i][j]=0;    
-            for(k = 0; k < numOfVectors; k++){    
-                mul[i][j] += a[i][k] * b[k][j];    
+            for(k = 0; k < numOfVectors; k++){
+                /*by matrixes multiplication rules*/    
+                mul[i][j] += a[i][k] * b[k][j];     
             }    
         }    
     } 
@@ -211,18 +213,21 @@ double** matrixMultiplication(double** a, double** b){
 }
 
 double calcWeightsForAdjacencyMatrix(double *vector1, double *vector2){
+    /*gets two vectors and calculates wij for them*/
     double dis = 0;
     int i;
-    for (i = 0; i < dimension; i++) { /*'''Claculates the euclidean distance between two vectors*/
+    for (i = 0; i < dimension; i++) { 
+        /*calculates the euclidean distance between two vectors*/
         dis += pow(vector1[i]-vector2[i],2);
     }
-    dis = sqrt(dis);
-    dis = -0.5*dis;
+    dis = sqrt(dis); /*added factors according to instructions*/
+    dis = -0.5*dis; /*added factors according to instructions*/
     
     return exp(dis);
 } 
 
 double** weightedAdjacencyMatrix(){
+    /*calculates weighted adjacency matrix after vectors matrix was set up*/
     int i, j;
 
     wam = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
@@ -233,11 +238,11 @@ double** weightedAdjacencyMatrix(){
     }
 
     for (i = 0; i < numOfVectors; i++){
-        double* vector1 = vectors[i];
-        for (j = i+1; j < numOfVectors; j++){
-            double* vector2 = vectors[j];
+        double* vector1 = vectors[i]; /*gets vector i*/
+        for (j = i+1; j < numOfVectors; j++){ 
+            double* vector2 = vectors[j]; /*gets vector j*/
             wam[i][j] = calcWeightsForAdjacencyMatrix(vector1, vector2);
-            wam[j][i] = wam[i][j];
+            wam[j][i] = wam[i][j]; /*wam is symetric*/
         }
     }
 
@@ -245,9 +250,10 @@ double** weightedAdjacencyMatrix(){
 }
 
 double** diagonalDegreeMatrix(int calcWam, int toPrint){
+    /*/*calculates diagonal degree matrix*/
     int i,j;
 
-    if (calcWam==1){
+    if (calcWam==1){ /*if wam wasn't calculated before, used in lnorm*/
         wam = weightedAdjacencyMatrix();
     }
 
@@ -261,14 +267,14 @@ double** diagonalDegreeMatrix(int calcWam, int toPrint){
     for (i = 0; i < numOfVectors; i++) {
         double sum = 0;
         for (j = 0; j < numOfVectors; j++){
-            sum += wam[i][j];
+            sum += wam[i][j]; /*sums the row*/
         }
 
-        if (toPrint==1){
+        if (toPrint==1){ /*if was called for ddg goal, only need to be printed*/
             ddg[i][i] = sum;
         }
         else{
-            ddg[i][i] = 1/sqrt(sum);
+            ddg[i][i] = 1/sqrt(sum); /*if was called for further calculations*/
         }  
     }
         
@@ -276,10 +282,11 @@ double** diagonalDegreeMatrix(int calcWam, int toPrint){
 } 
 
 double** laplacianNorm(){
+    /*calculated the laplacian norm matrix*/
     int i,j;
 
-    wam = weightedAdjacencyMatrix();
-    ddg = diagonalDegreeMatrix(0,0);
+    wam = weightedAdjacencyMatrix(); /*calling wam*/
+    ddg = diagonalDegreeMatrix(0,0); /*calling ddg without the need to calculate wam*/
 
     lnorm = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     assert(lnorm != NULL);
@@ -288,31 +295,33 @@ double** laplacianNorm(){
         assert(lnorm[i] != NULL);
     }
 
-    lnorm =  matrixMultiplication(matrixMultiplication(ddg, wam),ddg);
+    /*multiplies according to formula*/
+    lnorm =  matrixMultiplication(matrixMultiplication(ddg, wam),ddg); 
 
     for (i = 0; i < numOfVectors; i++){
         for (j = 0; j < numOfVectors; j++){
             if (i==j){
-                lnorm[i][j] = 1-lnorm[i][j];
+                lnorm[i][j] = 1-lnorm[i][j]; /*I - matrix*/
             }
             else{
-                lnorm[i][j] = (-1)*lnorm[i][j];
+                lnorm[i][j] = (-1)*lnorm[i][j]; /*I - matrix*/
             }
-
         }
     }
     return lnorm;
 }
 
 int* maxOffDiagonalValue(double** mat){
+    /*calculates the indexes of max off-diagonal element in a matrix*/
     int i,j;
     int maxRow = 0;
-    int maxCol = 1;
+    int maxCol = 1; /*initialized as the first off-diagonal element*/
     int* res;
 
     for (i = 0; i < numOfVectors; i++){
         for (j = i+1; j < numOfVectors; j++){
-            if (abs(mat[i][j])>abs(mat[maxRow][maxCol])){
+            /*finds the max off-diagonal element*/
+            if (abs(mat[i][j])>abs(mat[maxRow][maxCol])){ 
                 maxRow = i;
                 maxCol = j;
             }
@@ -322,30 +331,35 @@ int* maxOffDiagonalValue(double** mat){
     res = malloc(2*sizeof(int));
     res[0] = maxRow;
     res[1] = maxCol;
-    return res;
+    return res; /*returns as a tuple (i,j)*/
 }
 
 double calcTheta(int i, int j){
+    /*calcs theta as part os jacobi computations*/
     return (lnorm[j][j]-lnorm[i][i])/(2*lnorm[i][j]);
 }
 
 double calcT(double theta){
+    /*calcs t as part os jacobi computations*/
     int sign = theta < 0 ? -1 : 1;
     double denom = abs(theta)+sqrt(pow(theta,2)+1);
     return sign/denom;
 }
 
 double calcC(double t){
+    /*calcs c as part os jacobi computations*/
     return 1 / (sqrt(pow(t,2)+1));
 }
 
 double calcS(double t, double c){
+    /*calcs s as part os jacobi computations*/
     return t*c;
 }
 
 double** createRotationMatrixP(double** P, double** A, int maxRow, int maxCol, double c, double s){
+    /*calcs P rotation matrix as part os jacobi computations*/
     int i;
-    for (i = 0; i < numOfVectors; i++) {
+    for (i = 0; i < numOfVectors; i++) { /*I matrix*/
         P[i][i] = 1;
     }
     P[maxRow][maxRow] = c;
@@ -357,6 +371,7 @@ double** createRotationMatrixP(double** P, double** A, int maxRow, int maxCol, d
 }
 
 void updateAPrime(double** A, double** APrime, int i, int j, double c, double s){
+    /*gets A and A' and updates A' by five equations in instructions*/
     int r;
     for (r = 0; r < numOfVectors; r++){
         if ((r!=i) && (r!=j)){
@@ -371,6 +386,7 @@ void updateAPrime(double** A, double** APrime, int i, int j, double c, double s)
 }
 
 double calcOffSquared(double** mat){
+    /*gets a matrix and calculates the sum of off-diagonal elements squared*/
     int i,j;
     double sum;
     for (i = 0; i < numOfVectors; i++){
@@ -384,7 +400,8 @@ double calcOffSquared(double** mat){
 }
 
 int checkConvergence(double** A, double** APrime){
-    double epsilon = 0.001;
+    /*gets A and A' matrixes and checks if their off values are closer than epsilon*/
+    double epsilon = 0.001; /*constant from instructions*/
     double a = calcOffSquared(A);
     double ap = calcOffSquared(APrime);
 
@@ -395,9 +412,11 @@ int checkConvergence(double** A, double** APrime){
 }
 
 void printJacobi(double **A, double **V) {
+    /*gets A matrix (for eigenvalues) and V matrix (for eigenvectors) 
+    and prints them according to instructions*/
     int i,j;
     for (i = 0; i < numOfVectors; i++) {
-        printf("%.4f", A[i][i]); /*Format the floats precision to 4 digits*/
+        printf("%.4f", A[i][i]); /*eigenvalues, Format to 4 digits*/
             if (i < numOfVectors - 1) {
                 printf(",");
             }
@@ -405,17 +424,17 @@ void printJacobi(double **A, double **V) {
     }
     for (i = 0; i < numOfVectors; i++) {
         for (j = 0; j < numOfVectors; j++) {
-            printf("%.4f", V[j][i]); /*Transpose V, Format the floats precision to 4 digits*/
+            printf("%.4f", V[j][i]); /*Transpose V, Format to 4 digits*/
             if (j < numOfVectors - 1) {
                 printf(",");
             }
         }
         printf("\n");
     }
-    
 }
 
 double** jacobi(int toPrint){
+    /*calculates jacobi iterations until convergence*/
     int count = 0;
     int isConverged = 0;
     int* maxValInd;
@@ -423,7 +442,7 @@ double** jacobi(int toPrint){
     double theta, t, c, s;
     double **A, **APrime, **P, **V;
 
-    A = laplacianNorm();
+    A = laplacianNorm(); /*starting A is lnorm matrix*/
 
     APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     assert(APrime != NULL);
@@ -439,8 +458,8 @@ double** jacobi(int toPrint){
         V[i] = (double *)calloc(numOfVectors, sizeof(double));
         assert(V[i] != NULL);
     }
-    for (i = 0; i < numOfVectors; i++) {
-        V[i][i] = 1;
+    for (i = 0; i < numOfVectors; i++) { 
+        V[i][i] = 1; /*init V as I matrix for מeutrality to multiplication*/
     }
 
     do {
@@ -452,32 +471,32 @@ double** jacobi(int toPrint){
         c = calcC(t);
         s = calcS(t, c);
 
-        P = createRotationMatrixP(P, A, maxRow, maxCol, c, s);
-        V = matrixMultiplication(V, P);
-        updateAPrime(A, APrime, maxRow, maxCol, c, s);
-        isConverged = checkConvergence(A, APrime);
+        P = createRotationMatrixP(P, A, maxRow, maxCol, c, s); /*creating P rotation matrix*/
+        V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
+        updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
+        isConverged = checkConvergence(A, APrime); /*checks convergence*/
         A = APrime;
-        count++;
+        count++; /*iterations count*/
     }
-    while ((isConverged==0)&&(count<100));
+    while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
 
-    if (toPrint==0) {
+    if (toPrint==0) { /*if further calculations are necessary*/
         return eigengapHeuristic(A);
     }
-    else {
+    else { /*if goal was jacobi, only need to be printed*/
         printJacobi(A, V);
     }
 }  
 
 void swap(int *a, int *b) { 
-  /*This code was taken from www.programiz.com*/
+  /*swap for sort code, this code was taken from www.programiz.com*/
   int s = *a;
   *a = *b;
   *b = s;
 }
 
 int partition(int array[], int low, int high) { 
-  /*This code was taken from www.programiz.com*/
+  /*partition for sort code, this code was taken from www.programiz.com*/
   int pivot = array[high];
   int i = (low - 1);
   for (int j = low; j < high; j++) {
@@ -491,7 +510,7 @@ int partition(int array[], int low, int high) {
 }
 
 void quickSort(int array[], int low, int high) { 
-  /*This code was taken from www.programiz.com*/
+  /*quicksort for eigenvalues, this code was taken from www.programiz.com*/
   if (low < high) {
     int pi = partition(array, low, high);
     quickSort(array, low, pi - 1);
@@ -500,34 +519,36 @@ void quickSort(int array[], int low, int high) {
 }
 
 int eigengapHeuristic(){
+    /*calculates eigengaps for eigengap heuristic and calculates k*/
     int i, limit, maxGap, k;
     double **A;
     eigenVals = (double *)calloc(numOfVectors, sizeof(double));
-    A = jacobi(0);
+    A = jacobi(0); /*not for printing*/
     for (i = 0; i < numOfVectors; i++) {
-        eigenVals[i] = A[i][i];
+        eigenVals[i] = A[i][i]; /*eigenvals are on the diagonal line*/
     }
-    quicksort(eigenVals);
+    quicksort(eigenVals); /*sorting eigenvals*/
     eigenGaps = (double *)calloc(numOfVectors - 1, sizeof(double));
     for (i = 0; i < numOfVectors - 1; i++) {
+        /*calculates eigen gaps*/
         eigenGaps[i] = abs(eigenVals[i]-eigenVals[i+1]);
     }
     limit = floor(numOfVectors / 2);
-    for (i = 0; i < limit; i++) {
+    for (i = 0; i < limit; i++) { /*finds k*/
         if (eigenGaps[i] > maxGap) {
             maxGap = eigenGaps[i];
             k = i;
         }
     }
-    return k + 1;
+    return k + 1; /*becuase count in intructions starts from 1*/
 }
 
 void printMatrix(double** mat) {
-    /*Prints a matrix*/
+    /*prints a matrix*/
     int i, j;
     for (i = 0; i < numOfVectors; i++) {
         for (j = 0; j < numOfVectors; j++) {
-            printf("%.4f", mat[i][j]); /*Format the floats precision to 4 digits*/
+            printf("%.4f", mat[i][j]); /*format the floats precision to 4 digits*/
             if (j < numOfVectors - 1) {
                 printf(",");
             }
@@ -537,11 +558,11 @@ void printMatrix(double** mat) {
 }
 
 void printVectors() {
-    /*Prints the centroids*/
+    /*prints the vectors*/
     int i, j;
     for (i = 0; i < numOfVectors; i++) {
         for (j = 0; j < dimension; j++) {
-            printf("%.4f", vectors[i][j]); /*Format the floats precision to 4 digits*/
+            printf("%.4f", vectors[i][j]); /*format the floats precision to 4 digits*/
             if (j < dimension - 1) {
                 printf(",");
             }
@@ -549,12 +570,6 @@ void printVectors() {
         printf("\n");
     }
 }
-
-
-
-
-
-
 
 
 

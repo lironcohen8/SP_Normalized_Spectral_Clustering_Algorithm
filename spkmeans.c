@@ -4,11 +4,10 @@
 #include <assert.h>
 #include <math.h>
 
-struct eigenVector {
+typedef struct eigenVector {
     double eigenVal;
     int columnIndex;
-}; 
-typedef struct eigenVector eigenVector;
+} eigenVector; 
 
 int k, max_iter, dimension, numOfVectors = 0, changes = 1;
 float rawK, rawMaxIter;
@@ -197,6 +196,20 @@ void printResult() {
 }
 
 
+
+void printMatrix(double** mat) {
+    /*prints a matrix*/
+    int i, j;
+    for (i = 0; i < numOfVectors; i++) {
+        for (j = 0; j < numOfVectors; j++) {
+            printf("%.4f", mat[i][j]); /*format the floats precision to 4 digits*/
+            if (j < numOfVectors - 1) {
+                printf(",");
+            }
+        }
+        printf("\n");
+    }
+}
 
 double** matrixMultiplication(double** a, double** b){
     /*gets two matrixes and multiplies them*/
@@ -440,8 +453,8 @@ void printJacobi(double **A, double **V) {
             if (i < numOfVectors - 1) {
                 printf(",");
             }
-        printf("\n");
     }
+    printf("\n");
     for (i = 0; i < numOfVectors; i++) {
         for (j = 0; j < numOfVectors; j++) {
             printf("%.4f", V[j][i]); /*Transpose V, Format to 4 digits*/
@@ -499,6 +512,8 @@ double** jacobi(int toPrint){
         count++; /*iterations count*/
     }
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
+
+    printMatrix(A);
 
     if (toPrint==0) { /*if further calculations are necessary*/
         return A;
@@ -582,20 +597,6 @@ void createUMatrix() {
     }
     matrixTranspose(U);
     normalizeUMatrix();
-}
-
-void printMatrix(double** mat) {
-    /*prints a matrix*/
-    int i, j;
-    for (i = 0; i < numOfVectors; i++) {
-        for (j = 0; j < numOfVectors; j++) {
-            printf("%.4f", mat[i][j]); /*format the floats precision to 4 digits*/
-            if (j < numOfVectors - 1) {
-                printf(",");
-            }
-        }
-        printf("\n");
-    }
 }
 
 void printVectors() {

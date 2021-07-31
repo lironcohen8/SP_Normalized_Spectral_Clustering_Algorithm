@@ -197,6 +197,16 @@ void printResult() {
 
 
 
+
+void deepClone(double **a, double** b){
+    int i,j;
+    for (i = 0; i < numOfVectors; i++) {
+        for (j = 0; j < numOfVectors; j++) {
+            a[i][j] = b[i][j];
+        }
+    }
+}
+
 void printMatrix(double** mat) {
     /*prints a matrix*/
     int i, j;
@@ -233,7 +243,7 @@ double** matrixMultiplication(double** a, double** b){
     return mul;   
 }
 
-void matrixTranspose(double **matrix) {
+void squareMatrixTranspose(double **matrix) {
     /*transpose a NxN matrix*/
     int i,j,tmp;
     for (i = 1; i < numOfVectors; i++) {
@@ -468,10 +478,8 @@ void printJacobi(double **A, double **V) {
 
 double** jacobi(double **A, int toPrint){
     /*calculates jacobi iterations until convergence*/
-    int count = 0;
-    int isConverged = 0;
+    int i, maxRow, maxCol, count=0, isConverged=0;
     int* maxValInd;
-    int i, j, maxRow, maxCol;
     double theta, t, c, s;
     double **APrime, **P;
 
@@ -489,15 +497,11 @@ double** jacobi(double **A, int toPrint){
         V[i] = (double *)calloc(numOfVectors, sizeof(double));
         assert(V[i] != NULL);
     }
+
     for (i = 0; i < numOfVectors; i++) { 
         V[i][i] = 1; /*init V as I matrix for מeutrality to multiplication*/
     }
-    
-    for (i = 0; i < numOfVectors; i++) {
-        for (j = 0; j < numOfVectors; j++) {
-            APrime[i][j] = A[i][j];
-        }
-    }
+    deepClone(APrime, A);
 
     do {        
         maxValInd = maxOffDiagonalValue(A);        
@@ -516,16 +520,9 @@ double** jacobi(double **A, int toPrint){
 
         updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
         isConverged = checkConvergence(A, APrime); /*checks convergence*/
-        printf("~~~~~\n");
-        printf("i: %d j: %d theta: %f t: %f c: %f s: %f \n",maxRow, maxCol, theta,t,c,s);
-        printMatrix(APrime);
-        printf("~~~~~\n");
+
         /* A = APrime, deep clone */
-        for (i = 0; i < numOfVectors; i++) {
-            for (j = 0; j < numOfVectors; j++) {
-                A[i][j] = APrime[i][j];
-            }
-        }
+        deepClone(A,APrime);
         count++; /*iterations count*/
         }
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
@@ -590,27 +587,29 @@ void normalizeUMatrix() {
     int i,j;
     double sum;
     for (i = 0; i < numOfVectors; i++){
-        for (j = 0; j < numOfVectors; j++){
+        for (j = 0; j < k; j++){
             sum += pow(U[i][j],2);
         }
         sum = sqrt(sum);
-        for (j = 0; j < numOfVectors; j++){
+        for (j = 0; j < k; j++){
             U[i][j] = U[i][j] / sum;
         }
     }
 }
 
 void createUMatrix() {
-    int i;
-    matrixTranspose(V);
-    U = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    int i,j;
+    squareMatrixTranspose(V);
+
+    U = (double **)calloc(numOfVectors, k*sizeof(double));
     assert(U != NULL);
-    for (i = 0; i < k; i++) {
-        U[i] = (double *)calloc(numOfVectors, sizeof(double));
+    for (i = 0; i < numOfVectors; i++) {
+        U[i] = (double *)calloc(k, sizeof(double));
         assert(U[i] != NULL);
-        U[i] = V[eigenVectors[i].columnIndex];
+        for (j=0; j < k; j++){
+            U[i][j] = V[eigenVectors[j].columnIndex][i];
+        }
     }
-    matrixTranspose(U);
     normalizeUMatrix();
 }
 
@@ -631,7 +630,7 @@ void printVectors() {
 int main(int argc, char *argv[]) {
     FILE *file;
     char *goal;
-
+    
     assert(argc == 4); /*Checks if we have the right amount of args*/ 
     
     assert(sscanf(argv[1], "%f", &rawK) == 1);
@@ -644,8 +643,9 @@ int main(int argc, char *argv[]) {
     goal = argv[2];
 
     if (strcmp(goal,"spk")==0){
+        int calcK = eigengapHeuristic();
         if (k==0) {
-            k = eigengapHeuristic();
+            k = calcK;
         }
         createUMatrix();
     } 

@@ -9,7 +9,7 @@ typedef struct eigenVector {
     int columnIndex;
 } eigenVector; 
 
-int k, max_iter, dimension, numOfVectors = 0, changes = 1;
+int k, dimension, numOfVectors = 0, changes = 1;
 float rawK, rawMaxIter;
 double *eigenVals, *eigenGaps;
 double **vectors, **centroids, **wam, **ddg, **lnorm, **V, **U;
@@ -75,6 +75,18 @@ void readFile(FILE *file) {
     }
     while (fgets(buffer,1000,file) != NULL);
     free(vectorStr);
+}
+
+void assignUToVectors() {
+    int i;
+    free(vectors);
+    vectors = (double **)calloc(numOfVectors, k * sizeof(double));
+    assert(vectors != NULL);
+    for (i = 0; i < k; i++) {
+        vectors[i] = (double *)calloc(k, sizeof(double)); 
+        assert(vectors[i] != NULL);
+    }
+    vectors = U;
 }
 
 void initCentroids() {
@@ -630,6 +642,7 @@ void printVectors() {
 int main(int argc, char *argv[]) {
     FILE *file;
     char *goal;
+    int counter = 1, max_iter = 300;
     
     assert(argc == 4); /*Checks if we have the right amount of args*/ 
     
@@ -648,6 +661,16 @@ int main(int argc, char *argv[]) {
             k = calcK;
         }
         createUMatrix();
+        assignUToVectors();
+        initCentroids();
+        clusters = (int **)calloc(k, numOfVectors*sizeof(int));
+        assert(clusters != NULL);
+        while ((counter <= max_iter) && (changes > 0)) {
+            assignVectorToCluster();
+            updateCentroidValue();
+            counter += 1;
+        }
+        printResult();
     } 
     else if (strcmp(goal,"wam")==0){
         printMatrix(weightedAdjacencyMatrix());

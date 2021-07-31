@@ -376,8 +376,8 @@ double calcS(double t, double c){
     return t*c;
 }
 
-double** createRotationMatrixP(double** P, double** A, int maxRow, int maxCol, double c, double s){
-    /*calcs P rotation matrix as part os jacobi computations*/
+double** createRotationMatrixP(double** P, int maxRow, int maxCol, double c, double s){
+    /*calcs P rotation matrix as part of jacobi computations*/
     int i;
     for (i = 0; i < numOfVectors; i++) { /*I matrix*/
         P[i][i] = 1;
@@ -491,7 +491,7 @@ double** jacobi(int toPrint){
         c = calcC(t);
         s = calcS(t, c);
 
-        P = createRotationMatrixP(P, A, maxRow, maxCol, c, s); /*creating P rotation matrix*/
+        P = createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
         V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
         updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
         isConverged = checkConvergence(A, APrime); /*checks convergence*/
@@ -501,10 +501,11 @@ double** jacobi(int toPrint){
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
 
     if (toPrint==0) { /*if further calculations are necessary*/
-        return eigengapHeuristic(A);
+        return A;
     }
     else { /*if goal was jacobi, only need to be printed*/
         printJacobi(A, V);
+        return NULL;
     }
 }  
 
@@ -555,20 +556,6 @@ int eigengapHeuristic(){
     return k + 1; /*becuase count in intructions starts from 1*/
 }
 
-void createUMatrix() {
-    int i;
-    matrixTranspose(V);
-    U = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(U != NULL);
-    for (i = 0; i < k; i++) {
-        U[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(U[i] != NULL);
-        U[i] = V[eigenVectors[i].columnIndex];
-    }
-    matrixTranspose(U);
-    normalizeUMatrix();
-}
-
 void normalizeUMatrix() {
     int i,j;
     double sum;
@@ -581,6 +568,20 @@ void normalizeUMatrix() {
             U[i][j] = U[i][j] / sum;
         }
     }
+}
+
+void createUMatrix() {
+    int i;
+    matrixTranspose(V);
+    U = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(U != NULL);
+    for (i = 0; i < k; i++) {
+        U[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(U[i] != NULL);
+        U[i] = V[eigenVectors[i].columnIndex];
+    }
+    matrixTranspose(U);
+    normalizeUMatrix();
 }
 
 void printMatrix(double** mat) {

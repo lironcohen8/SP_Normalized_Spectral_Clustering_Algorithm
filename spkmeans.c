@@ -1,5 +1,3 @@
-#define PY_SSIZE_T_CLEAN
-/*#include <Python.h>*/
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
@@ -694,128 +692,9 @@ int main(int argc, char *argv[]) {
         assert(0==1); /*If the goal is unknown*/
     }
         
-
-    /*
-    int counter = 1;
-    assert(argc == 3 || argc == 2); 
-
-    assert(sscanf(argv[1], "%f", &rawK) == 1);
-    k = (int)rawK;
-    assert(rawK - k == 0 && k > 0); 
-    
-    max_iter = 200;
-    if (argc == 3) {
-        assert(sscanf(argv[2], "%f", &rawMaxIter) == 1);
-        max_iter = (int)rawMaxIter;
-        assert(rawMaxIter - max_iter == 0 && max_iter > 0); 
-    }
-    
-    readFile();
-    initCentroids();
-    
-    clusters = (int **)calloc(k, numOfVectors*sizeof(int));
-    assert(clusters != NULL);
-    while ((counter<=max_iter) && (changes > 0)) {
-        assignVectorToCluster();
-        updateCentroidValue();
-        counter += 1;
-    }
-
-    printResult();
     free(vectors);
     free(centroids);
     free(clusters);
     free(clustersSizes);
-    */
     return 0;
 }
-
-/*
-static PyObject* fit(PyObject *self, PyObject *args){
-    int i, j;
-    int counter = 1;
-    PyObject *pyCentroids;
-    PyObject *pyVectors;
-    PyObject *tempVec = NULL;
-    PyObject *tempCentroid = NULL;
-    PyObject *resCentroids;
-
-    if (!PyArg_ParseTuple(args,"OiiOii",&pyCentroids, &k, &max_iter, &pyVectors, &numOfVectors, &dimension)){
-        return NULL;
-    }
-    
-    vectors = (double **)calloc(numOfVectors, dimension*sizeof(double));
-    assert(vectors != NULL);
-    centroids = (double **)calloc(k, dimension*sizeof(double));
-    assert(centroids != NULL);
-    
-    for (i = 0; i < k; i++) {
-        centroids[i] = (double *)calloc(dimension, sizeof(double));
-        assert(centroids[i] != NULL);
-        tempVec = PyList_GetItem(pyCentroids,i);
-        for (j = 0; j < dimension; j++) {
-            centroids[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
-        }
-    } 
-
-    for (i = 0; i < numOfVectors; i++) {
-        vectors[i] = (double *)calloc(dimension, sizeof(double));
-        assert(vectors[i] != NULL);
-        tempVec = PyList_GetItem(pyVectors,i);
-        for (j = 0; j < dimension; j++) {
-            vectors[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
-        }
-    } 
-
-    clusters = (int **)calloc(k, numOfVectors*sizeof(int));
-    assert(clusters != NULL);
-    while ((counter<=max_iter) && (changes > 0)) {
-        assignVectorToCluster();
-        updateCentroidValue();
-        counter += 1;
-    }
-
-    resCentroids = PyList_New(0);
-    for (i=0; i<k; i++){
-        tempCentroid = PyList_New(0);
-        for (j=0; j<dimension; j++){
-            PyList_Append(tempCentroid,PyFloat_FromDouble(centroids[i][j]));
-        }
-        PyList_Append(resCentroids, tempCentroid);
-    }
-    
-    free(vectors);
-    free(centroids);
-    free(clusters);
-    free(clustersSizes);
-    
-    return resCentroids;
-}
-
-static PyMethodDef kmeansMethods[] = {
-    {"fit",
-    (PyCFunction) fit,
-    METH_VARARGS,
-    PyDoc_STR("Kmeans")},
-    {NULL, NULL, 0, NULL}
-};
-
-static struct PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT,
-    "mykmeanssp",     // name of module exposed to Python
-    "mykmeanssp Python wrapper for custom C extension library.", // module documentation
-    -1,
-    kmeansMethods
-};
-
-PyMODINIT_FUNC
-PyInit_mykmeanssp(void)
-{
-    PyObject *m;
-    m = PyModule_Create(&moduledef);
-    if (!m) {
-        return NULL;
-    }
-    return m;
-}
-*/

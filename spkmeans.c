@@ -24,6 +24,18 @@ int strcmp (const char* str1, const char* str2);
 void qsort(void *base, size_t nmemb, size_t size,
            int (*compar)(const void *, const void *));
 
+void errorsAssert(int cond, int isInputError) {
+    if (!cond) {
+        if (isInputError==1) {
+            printf("Invalid Input!");
+        }
+        else {
+            printf("An Error Has Occured");
+        }
+        assert(0);
+    }
+}
+
 int calcDimension(char buffer[]) {
     /*gets a buffer contains the first vector and calculates*/
     int i, dimension; 
@@ -47,9 +59,9 @@ void readFile(FILE *file) {
     char *vectorStr, buffer[1000];
     double **tmp;
     vectorStr = (char *)calloc(dimension, 100*sizeof(char));
-    assert(vectorStr != NULL);
+    errorsAssert(vectorStr != NULL,0);
     vectors = (double **)malloc(1 * sizeof(*vectors));
-    assert(vectors != NULL);
+    errorsAssert(vectors != NULL,0);
     fgets(buffer,1000,file);
     dimension = calcDimension(buffer);
     do {
@@ -61,7 +73,7 @@ void readFile(FILE *file) {
         vectorStr = strtok(buffer, ",");
         j = 0;
         vectors[numOfVectors] = (double *)calloc(dimension, sizeof(double)); 
-        assert(vectors[numOfVectors] != NULL);
+        errorsAssert(vectors[numOfVectors] != NULL,0);
         while (vectorStr != NULL) {
             vectors[numOfVectors][j] = atof(vectorStr);
             vectorStr = strtok(NULL, ",");
@@ -78,10 +90,10 @@ void assignUToVectors() {
     int i;
     free(vectors);
     vectors = (double **)calloc(numOfVectors, k * sizeof(double));
-    assert(vectors != NULL);
+    errorsAssert(vectors != NULL,0);
     for (i = 0; i < k; i++) {
         vectors[i] = (double *)calloc(k, sizeof(double)); 
-        assert(vectors[i] != NULL);
+        errorsAssert(vectors[i] != NULL,0);
     }
     vectors = U;
 }
@@ -90,11 +102,11 @@ void initCentroids() {
     /*Initialize the clusters and their centroids from the first K vectors*/
     int i,j;
     centroids = (double **)calloc(k, dimension*sizeof(double));
-    assert(centroids != NULL);
-    assert(k < numOfVectors);
+    errorsAssert(centroids != NULL,0);
+    errorsAssert(k < numOfVectors,0);
     for (i = 0; i < k; i++) {
         centroids[i] = (double *)calloc(dimension, sizeof(double)); 
-        assert(centroids[i] != NULL);
+        errorsAssert(centroids[i] != NULL,0);
         for (j = 0; j < dimension; j++) {
             centroids[i][j] = vectors[i][j];
         }
@@ -135,12 +147,12 @@ void assignVectorToCluster() {
     int i, newCentroidInd, clusterSize;
     int * cluster;
     clustersSizes = (int *)calloc(k, sizeof(int));
-    assert(clustersSizes != NULL);
+    errorsAssert(clustersSizes != NULL,0);
 
     /*Clearing all clusters (we do not want to remember what was here)*/
     for (i = 0; i < k; i++) { 
         clusters[i] = (int *)calloc(numOfVectors, sizeof(int));
-        assert(clusters[i] != NULL);
+        errorsAssert(clusters[i] != NULL,0);
     }
         
     for (i = 0; i < numOfVectors; i++) {
@@ -157,7 +169,7 @@ double* calcCentroidForCluster(int clusterInd) {
     int numOfVectorsInCluster, i, j;
     int * cluster;
     double * sumVector = (double *)calloc(dimension, sizeof(double));
-    assert(sumVector != NULL);
+    errorsAssert(sumVector != NULL,0);
     numOfVectorsInCluster = clustersSizes[clusterInd];
     cluster = clusters[clusterInd];
     
@@ -233,10 +245,10 @@ double** matrixMultiplication(double** a, double** b){
     /*gets two matrixes and multiplies them*/
     int i,j,k;
     double** mul = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(mul != NULL);
+    errorsAssert(mul != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         mul[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(mul[i] != NULL);
+        errorsAssert(mul[i] != NULL,0);
     }
 
     for(i = 0; i < numOfVectors; i++){    
@@ -282,10 +294,10 @@ double** weightedAdjacencyMatrix(){
     int i, j;
 
     wam = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(wam != NULL);
+    errorsAssert(wam != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         wam[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(wam[i] != NULL);
+        errorsAssert(wam[i] != NULL,0);
     }
 
     for (i = 0; i < numOfVectors; i++){
@@ -309,10 +321,10 @@ double** diagonalDegreeMatrix(int calcWam, int toPrint){
     }
 
     ddg = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(ddg != NULL);
+    errorsAssert(ddg != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         ddg[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(ddg[i] != NULL);
+        errorsAssert(ddg[i] != NULL,0);
     }
 
     for (i = 0; i < numOfVectors; i++) {
@@ -340,10 +352,10 @@ double** laplacianNorm(){
     ddg = diagonalDegreeMatrix(0,0); /*calling ddg without the need to calculate wam*/
 
     lnorm = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(lnorm != NULL);
+    errorsAssert(lnorm != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         lnorm[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(lnorm[i] != NULL);
+        errorsAssert(lnorm[i] != NULL,0);
     }
 
     /*multiplies according to formula*/
@@ -493,18 +505,18 @@ double** jacobi(double **A, int toPrint){
     double **APrime, **P;
 
     APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(APrime != NULL);
+    errorsAssert(APrime != NULL,0);
     P = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(P != NULL);
+    errorsAssert(P != NULL,0);
     V = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    assert(V != NULL);
+    errorsAssert(V != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         APrime[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(APrime[i] != NULL);
+        errorsAssert(APrime[i] != NULL,0);
         P[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(P[i] != NULL);
+        errorsAssert(P[i] != NULL,0);
         V[i] = (double *)calloc(numOfVectors, sizeof(double));
-        assert(V[i] != NULL);
+        errorsAssert(V[i] != NULL,0);
     }
 
     for (i = 0; i < numOfVectors; i++) { 
@@ -558,7 +570,7 @@ void sortEigenVectorsAndValues() {
     and sorts eigen values accordingly*/
     int i;
     eigenVectors = (eigenVector *)calloc(numOfVectors, numOfVectors*sizeof(eigenVector));
-    assert(eigenVectors != NULL);
+    errorsAssert(eigenVectors != NULL,0);
     for (i = 0; i < numOfVectors; i++) { /*sets eigenvector's attributes*/
         eigenVectors[i].columnIndex = i;
         eigenVectors[i].eigenVal = eigenVals[i];
@@ -617,10 +629,10 @@ void createUMatrix() {
     squareMatrixTranspose(V, numOfVectors); /*in order to place vectors as rows*/
 
     U = (double **)calloc(numOfVectors, k*sizeof(double));
-    assert(U != NULL);
+    errorsAssert(U != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         U[i] = (double *)calloc(k, sizeof(double));
-        assert(U[i] != NULL);
+        errorsAssert(U[i] != NULL,0);
         for (j = 0; j < k; j++){
             /*takes relevant part of vectors and puts it as a column*/
             U[i][j] = V[eigenVectors[j].columnIndex][i]; 
@@ -648,11 +660,11 @@ int main(int argc, char *argv[]) {
     char *goal;
     int counter = 1, max_iter = 300;
     
-    assert(argc == 4); /*Checks if we have the right amount of args*/ 
+    errorsAssert(argc == 4,1); /*Checks if we have the right amount of args*/ 
     
-    assert(sscanf(argv[1], "%f", &rawK) == 1);
+    errorsAssert(sscanf(argv[1], "%f", &rawK) == 1,1);
     k = (int)rawK;
-    assert(rawK - k == 0 && k >= 0); /*checks if k is a non-negative int*/
+    errorsAssert(rawK - k == 0 && k >= 0,1); /*checks if k is a non-negative int*/
     
     file = fopen(argv[3],"r");
     readFile(file);
@@ -668,7 +680,7 @@ int main(int argc, char *argv[]) {
         assignUToVectors();
         initCentroids();
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
-        assert(clusters != NULL);
+        errorsAssert(clusters != NULL,0);
         while ((counter <= max_iter) && (changes > 0)) {
             assignVectorToCluster();
             updateCentroidValue();
@@ -689,7 +701,7 @@ int main(int argc, char *argv[]) {
         jacobi(vectors, 1);
     } 
     else{
-        assert(0==1); /*If the goal is unknown*/
+        errorsAssert(0==1,1); /*If the goal is unknown*/
     }
         
     free(vectors);

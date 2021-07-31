@@ -4,11 +4,18 @@
 #include <assert.h>
 #include <math.h>
 
+struct eigenVector {
+    double eigenVal;
+    int columnIndex;
+}; 
+typedef struct eigenVector eigenVector;
+
 int k, max_iter, dimension, numOfVectors = 0, changes = 1;
 float rawK, rawMaxIter;
 double *eigenVals, *eigenGaps;
-double **vectors, **centroids, **wam, **ddg, **lnorm;
+double **vectors, **centroids, **wam, **ddg, **lnorm, **V, **U;
 int **clusters, *clustersSizes;
+eigenVector *eigenVectors;
 
 void *calloc(size_t nitems, size_t size);
 void *malloc(size_t size);
@@ -17,7 +24,8 @@ void free(void *ptr);
 char *strtok(char * str, const char *delim);
 double atof(const char * str);
 int strcmp (const char* str1, const char* str2);
-
+void qsort(void *base, size_t nmemb, size_t size,
+           int (*compar)(const void *, const void *));
 
 int calcDimension(char buffer[]) {
     /*
@@ -210,6 +218,18 @@ double** matrixMultiplication(double** a, double** b){
         }    
     } 
     return mul;   
+}
+
+void matrixTranspose(double **matrix) {
+    /*transpose a NxN matrix*/
+    int i,j,tmp;
+    for (i = 1; i < numOfVectors; i++) {
+        for (j = 0; j < i; j++) {
+            tmp = matrix[i][j];
+            matrix[i][j] = matrix[j][i];
+            matrix[j][i] = tmp;
+        }
+    }
 }
 
 double calcWeightsForAdjacencyMatrix(double *vector1, double *vector2){
@@ -440,7 +460,7 @@ double** jacobi(int toPrint){
     int* maxValInd;
     int i, maxRow, maxCol;
     double theta, t, c, s;
-    double **A, **APrime, **P, **V;
+    double **A, **APrime, **P;
 
     A = laplacianNorm(); /*starting A is lnorm matrix*/
 
@@ -488,34 +508,26 @@ double** jacobi(int toPrint){
     }
 }  
 
-void swap(int *a, int *b) { 
-  /*swap for sort code, this code was taken from www.programiz.com*/
-  int s = *a;
-  *a = *b;
-  *b = s;
+int compareEigenVectors(const void *a, const void *b) {
+    struct eigenVector *eva = (struct eigenVector *) a;
+    struct eigenVector *evb = (struct eigenVector *) b;
+    int diff = eva->eigenVal - evb->eigenVal;
+    return diff != 0 ? diff : eva->columnIndex - evb->columnIndex;
 }
 
-int partition(int array[], int low, int high) { 
-  /*partition for sort code, this code was taken from www.programiz.com*/
-  int pivot = array[high];
-  int i = (low - 1);
-  for (int j = low; j < high; j++) {
-    if (array[j] <= pivot) {
-      i++;
-      swap(&array[i], &array[j]);
+void sortEigenVectorsAndValues() {
+    int i;
+    eigenVectors = (eigenVector *)calloc(numOfVectors, numOfVectors*sizeof(eigenVector));
+    assert(eigenVectors != NULL);
+    for (i = 0; i < numOfVectors; i++) {
+        eigenVectors[i].columnIndex = i;
+        eigenVectors[i].eigenVal = eigenVals[i];
     }
-  }
-  swap(&array[i + 1], &array[high]);
-  return (i + 1);
-}
-
-void quickSort(int array[], int low, int high) { 
-  /*quicksort for eigenvalues, this code was taken from www.programiz.com*/
-  if (low < high) {
-    int pi = partition(array, low, high);
-    quickSort(array, low, pi - 1);
-    quickSort(array, pi + 1, high);
-  }
+    
+    qsort(eigenVectors, numOfVectors, sizeof(eigenVector), compareEigenVectors);
+    for (i = 0; i < numOfVectors; i++) {
+        eigenVals[i] = eigenVectors[i].eigenVal;
+    }
 }
 
 int eigengapHeuristic(){
@@ -527,7 +539,7 @@ int eigengapHeuristic(){
     for (i = 0; i < numOfVectors; i++) {
         eigenVals[i] = A[i][i]; /*eigenvals are on the diagonal line*/
     }
-    quicksort(eigenVals); /*sorting eigenvals*/
+    sortEigenVectorsAndValues(); /*sorting eigenvectors and eigenvals*/
     eigenGaps = (double *)calloc(numOfVectors - 1, sizeof(double));
     for (i = 0; i < numOfVectors - 1; i++) {
         /*calculates eigen gaps*/
@@ -541,6 +553,19 @@ int eigengapHeuristic(){
         }
     }
     return k + 1; /*becuase count in intructions starts from 1*/
+}
+
+void createUMatrix() {
+    int i;
+    matrixTranspose(V);
+    U = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    assert(U != NULL);
+    for (i = 0; i < k; i++) {
+        U[i] = (double *)calloc(numOfVectors, sizeof(double));
+        assert(U[i] != NULL);
+        U[i] = V[eigenVectors[i].columnIndex];
+    }
+    matrixTranspose(U);
 }
 
 void printMatrix(double** mat) {
@@ -593,6 +618,7 @@ int main(int argc, char *argv[]) {
         if (k==0) {
             k = eigengapHeuristic();
         }
+        createUMatrix();
     } 
     else if (strcmp(goal,"wam")==0){
         printMatrix(weightedAdjacencyMatrix());

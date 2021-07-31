@@ -27,9 +27,7 @@ void qsort(void *base, size_t nmemb, size_t size,
            int (*compar)(const void *, const void *));
 
 int calcDimension(char buffer[]) {
-    /*
-    gets a buffer contains the first vector and calculates 
-    */
+    /*gets a buffer contains the first vector and calculates*/
     int i, dimension; 
     char c;
     dimension = 0;
@@ -78,6 +76,7 @@ void readFile(FILE *file) {
 }
 
 void assignUToVectors() {
+    /*put U vectors in vectors matrix for further calculations*/
     int i;
     free(vectors);
     vectors = (double **)calloc(numOfVectors, k * sizeof(double));
@@ -105,7 +104,7 @@ void initCentroids() {
 }
 
 double distance(double *vector1, double *vector2) {
-    /*'''Claculates the distance between two vectors*/
+    /*Calculates the distance between two vectors*/
     double dis = 0;
     int i;
     for (i = 0; i < dimension; i++) {
@@ -209,6 +208,7 @@ void printResult() {
 
 
 void deepClone(double **a, double** b){
+    /*clones b matrix values to a*/
     int i,j;
     for (i = 0; i < numOfVectors; i++) {
         for (j = 0; j < numOfVectors; j++) {
@@ -253,10 +253,10 @@ double** matrixMultiplication(double** a, double** b){
     return mul;   
 }
 
-void squareMatrixTranspose(double **matrix) {
-    /*transpose a NxN matrix*/
+void squareMatrixTranspose(double **matrix, int numOfRows) {
+    /*transpose a squared matrix*/
     int i,j,tmp;
-    for (i = 1; i < numOfVectors; i++) {
+    for (i = 1; i < numOfRows; i++) {
         for (j = 0; j < i; j++) {
             tmp = matrix[i][j];
             matrix[i][j] = matrix[j][i];
@@ -548,21 +548,25 @@ double** jacobi(double **A, int toPrint){
 }  
 
 int compareEigenVectors(const void *a, const void *b) {
+    /*comperator of vectors for quicksort*/
     struct eigenVector *eva = (struct eigenVector *) a;
     struct eigenVector *evb = (struct eigenVector *) b;
-    int diff = eva->eigenVal - evb->eigenVal;
-    return diff != 0 ? diff : eva->columnIndex - evb->columnIndex;
+    int diff = eva->eigenVal - evb->eigenVal; /*by eigen values*/
+    return diff != 0 ? diff : eva->columnIndex - evb->columnIndex; /*then, by index*/
 }
 
 void sortEigenVectorsAndValues() {
+    /*sorts eigen vecctors using quicksort 
+    and sorts eigen values accordingly*/
     int i;
     eigenVectors = (eigenVector *)calloc(numOfVectors, numOfVectors*sizeof(eigenVector));
     assert(eigenVectors != NULL);
-    for (i = 0; i < numOfVectors; i++) {
+    for (i = 0; i < numOfVectors; i++) { /*sets eigenvector's attributes*/
         eigenVectors[i].columnIndex = i;
         eigenVectors[i].eigenVal = eigenVals[i];
     }
     
+    /*sorting*/
     qsort(eigenVectors, numOfVectors, sizeof(eigenVector), compareEigenVectors);
     for (i = 0; i < numOfVectors; i++) {
         eigenVals[i] = eigenVectors[i].eigenVal;
@@ -595,6 +599,7 @@ int eigengapHeuristic(){
 }
 
 void normalizeUMatrix() {
+    /*normalizes U matrix to T matrix according to formula*/
     int i,j;
     double sum;
     for (i = 0; i < numOfVectors; i++){
@@ -609,8 +614,9 @@ void normalizeUMatrix() {
 }
 
 void createUMatrix() {
+    /*takes k-smallest-eigenvals vectors from V matrix*/
     int i,j;
-    squareMatrixTranspose(V);
+    squareMatrixTranspose(V, numOfVectors); /*in order to place vectors as rows*/
 
     U = (double **)calloc(numOfVectors, k*sizeof(double));
     assert(U != NULL);
@@ -618,27 +624,15 @@ void createUMatrix() {
         U[i] = (double *)calloc(k, sizeof(double));
         assert(U[i] != NULL);
         for (j = 0; j < k; j++){
-            U[i][j] = V[eigenVectors[j].columnIndex][i];
+            /*takes relevant part of vectors and puts it as a column*/
+            U[i][j] = V[eigenVectors[j].columnIndex][i]; 
         }
     }
-    printf("eigen vals:\n");
-    printf("\n");
-    for (i = 0 ; i < numOfVectors; i++) {
-        printf("%f,", eigenVals[i]);
-    }
-    printf("\n");
-    printf("V:\n");
-    printMatrix(V,numOfVectors,numOfVectors);
-    printf("\n");
-    printf("U:\n");
-    printMatrix(U,numOfVectors,k);
-    printf("\n");
-    printf("result:\n");
     normalizeUMatrix();
 }
 
 void printVectors() {
-    /*prints the vectors*/
+    /*prints the vectors in vectors matrix*/
     int i, j;
     for (i = 0; i < numOfVectors; i++) {
         for (j = 0; j < dimension; j++) {
@@ -700,7 +694,6 @@ int main(int argc, char *argv[]) {
         assert(0==1); /*If the goal is unknown*/
     }
         
-
 
     /*
     int counter = 1;

@@ -492,6 +492,12 @@ double** jacobi(double **A, int toPrint){
     for (i = 0; i < numOfVectors; i++) { 
         V[i][i] = 1; /*init V as I matrix for מeutrality to multiplication*/
     }
+    
+    for (i = 0; i < numOfVectors; i++) {
+        for (j = 0; j < numOfVectors; j++) {
+            APrime[i][j] = A[i][j];
+        }
+    }
 
     do {        
         maxValInd = maxOffDiagonalValue(A);        
@@ -510,7 +516,10 @@ double** jacobi(double **A, int toPrint){
 
         updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
         isConverged = checkConvergence(A, APrime); /*checks convergence*/
-
+        printf("~~~~~\n");
+        printf("i: %d j: %d theta: %f t: %f c: %f s: %f \n",maxRow, maxCol, theta,t,c,s);
+        printMatrix(APrime);
+        printf("~~~~~\n");
         /* A = APrime, deep clone */
         for (i = 0; i < numOfVectors; i++) {
             for (j = 0; j < numOfVectors; j++) {

@@ -411,18 +411,19 @@ double calcS(double t, double c){
     return t*c;
 }
 
-double** createRotationMatrixP(double** P, int maxRow, int maxCol, double c, double s){
+void createRotationMatrixP(double** P, int maxRow, int maxCol, double c, double s){
     /*calcs P rotation matrix as part of jacobi computations*/
-    int i;
+    int i,j;
     for (i = 0; i < numOfVectors; i++) { /*I matrix*/
-        P[i][i] = 1;
+        for (j = 0; j < numOfVectors; j++) { 
+            P[i][j] = i==j ? 1 : 0;
+        }
     }
+
     P[maxRow][maxRow] = c;
     P[maxCol][maxCol] = c;
     P[maxRow][maxCol] = s;
     P[maxCol][maxRow] = (-1)*s;
-
-    return P;
 }
 
 void updateAPrime(double** A, double** APrime, int i, int j, double c, double s){
@@ -527,7 +528,7 @@ double** jacobi(double **A, int toPrint){
         c = calcC(t);
         s = calcS(t, c);
 
-        P = createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
+        createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
         V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
 
         updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/

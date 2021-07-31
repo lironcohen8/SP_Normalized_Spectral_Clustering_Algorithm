@@ -408,8 +408,8 @@ void updateAPrime(double** A, double** APrime, int i, int j, double c, double s)
     int r;
     for (r = 0; r < numOfVectors; r++){
         if ((r!=i) && (r!=j)){
-            APrime[r][i] = c*A[r][i]-s*A[r][j];
-            APrime[r][j] = c*A[r][j]+s*A[r][i];
+            APrime[i][r] = APrime[r][i] = c*A[r][i]-s*A[r][j];
+            APrime[j][r] = APrime[r][j] = c*A[r][j]+s*A[r][i];
         }
     }
     APrime[i][i] = pow(c,2)*A[i][i]+pow(s,2)*A[j][j]-2*s*c*A[i][j];
@@ -421,7 +421,7 @@ void updateAPrime(double** A, double** APrime, int i, int j, double c, double s)
 double calcOffSquared(double** mat){
     /*gets a matrix and calculates the sum of off-diagonal elements squared*/
     int i,j;
-    double sum;
+    double sum = 0;
     for (i = 0; i < numOfVectors; i++){
         for (j = 0; j < numOfVectors; j++){
             if (i!=j){
@@ -437,7 +437,7 @@ int checkConvergence(double** A, double** APrime){
     double epsilon = 0.001; /*constant from instructions*/
     double a = calcOffSquared(A);
     double ap = calcOffSquared(APrime);
-
+    
     if ((a-ap)<=epsilon){
         return 1;
     }
@@ -504,13 +504,13 @@ double** jacobi(double **A, int toPrint){
         t = calcT(theta);
         c = calcC(t);
         s = calcS(t, c);
-        printf("theta: %f, t: %f, c: %f, s: %f\n", theta, t, c, s);
 
         P = createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
         V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
-        updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
 
+        updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
         isConverged = checkConvergence(A, APrime); /*checks convergence*/
+
         /* A = APrime, deep clone */
         for (i = 0; i < numOfVectors; i++) {
             for (j = 0; j < numOfVectors; j++) {

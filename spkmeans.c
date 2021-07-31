@@ -208,8 +208,6 @@ void printResult() {
 }
 
 
-
-
 void deepClone(double **a, double** b){
     int i,j;
     for (i = 0; i < numOfVectors; i++) {
@@ -219,13 +217,13 @@ void deepClone(double **a, double** b){
     }
 }
 
-void printMatrix(double** mat) {
+void printMatrix(double** mat, int numOfRows, int numOfCols) {
     /*prints a matrix*/
     int i, j;
-    for (i = 0; i < numOfVectors; i++) {
-        for (j = 0; j < numOfVectors; j++) {
+    for (i = 0; i < numOfRows; i++) {
+        for (j = 0; j < numOfCols; j++) {
             printf("%.4f", mat[i][j]); /*format the floats precision to 4 digits*/
-            if (j < numOfVectors - 1) {
+            if (j < numOfCols - 1) {
                 printf(",");
             }
         }
@@ -619,10 +617,23 @@ void createUMatrix() {
     for (i = 0; i < numOfVectors; i++) {
         U[i] = (double *)calloc(k, sizeof(double));
         assert(U[i] != NULL);
-        for (j=0; j < k; j++){
+        for (j = 0; j < k; j++){
             U[i][j] = V[eigenVectors[j].columnIndex][i];
         }
     }
+    printf("eigen vals:\n");
+    printf("\n");
+    for (i = 0 ; i < numOfVectors; i++) {
+        printf("%f,", eigenVals[i]);
+    }
+    printf("\n");
+    printf("V:\n");
+    printMatrix(V,numOfVectors,numOfVectors);
+    printf("\n");
+    printf("U:\n");
+    printMatrix(U,numOfVectors,k);
+    printf("\n");
+    printf("result:\n");
     normalizeUMatrix();
 }
 
@@ -674,13 +685,13 @@ int main(int argc, char *argv[]) {
         printResult();
     } 
     else if (strcmp(goal,"wam")==0){
-        printMatrix(weightedAdjacencyMatrix());
+        printMatrix(weightedAdjacencyMatrix(),numOfVectors,numOfVectors);
     } 
     else if (strcmp(goal,"ddg")==0){
-        printMatrix(diagonalDegreeMatrix(1,1));
+        printMatrix(diagonalDegreeMatrix(1,1),numOfVectors,numOfVectors);
     } 
     else if (strcmp(goal,"lnorm")==0){
-        printMatrix(laplacianNorm());
+        printMatrix(laplacianNorm(),numOfVectors,numOfVectors);
     } 
     else if (strcmp(goal,"jacobi")==0){
         jacobi(vectors, 1);

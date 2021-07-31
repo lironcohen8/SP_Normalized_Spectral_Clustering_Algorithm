@@ -566,6 +566,21 @@ void createUMatrix() {
         U[i] = V[eigenVectors[i].columnIndex];
     }
     matrixTranspose(U);
+    normalizeUMatrix();
+}
+
+void normalizeUMatrix() {
+    int i,j;
+    double sum;
+    for (i = 0; i < numOfVectors; i++){
+        for (j = 0; j < numOfVectors; j++){
+            sum += pow(U[i][j],2);
+        }
+        sum = sqrt(sum);
+        for (j = 0; j < numOfVectors; j++){
+            U[i][j] = U[i][j] / sum;
+        }
+    }
 }
 
 void printMatrix(double** mat) {

@@ -613,9 +613,6 @@ void printVectors() {
     }
 }
 
-
-
-
 int main(int argc, char *argv[]) {
     FILE *file;
     char *goal;

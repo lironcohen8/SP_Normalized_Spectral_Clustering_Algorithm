@@ -354,7 +354,7 @@ int* maxOffDiagonalValue(double** mat){
     for (i = 0; i < numOfVectors; i++){
         for (j = i+1; j < numOfVectors; j++){
             /*finds the max off-diagonal element*/
-            if (abs(mat[i][j])>abs(mat[maxRow][maxCol])){ 
+            if (fabs(mat[i][j])>fabs(mat[maxRow][maxCol])){ 
                 maxRow = i;
                 maxCol = j;
             }
@@ -375,7 +375,7 @@ double calcTheta(double **matrix, int i, int j){
 double calcT(double theta){
     /*calcs t as part os jacobi computations*/
     int sign = theta < 0 ? -1 : 1;
-    double denom = abs(theta)+sqrt(pow(theta,2)+1);
+    double denom = fabs(theta)+sqrt(pow(theta,2)+1);
     return sign/denom;
 }
 
@@ -497,11 +497,14 @@ double** jacobi(double **A, int toPrint){
         maxValInd = maxOffDiagonalValue(A);        
         maxRow = maxValInd[0];
         maxCol = maxValInd[1];
+        if (A[maxRow][maxCol] == 0) { /*matrix is already diagonal*/
+            break;
+        }
         theta = calcTheta(A, maxRow, maxCol);
         t = calcT(theta);
         c = calcC(t);
         s = calcS(t, c);
-
+        printf("theta: %f, t: %f, c: %f, s: %f\n", theta, t, c, s);
 
         P = createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
         V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
@@ -515,7 +518,7 @@ double** jacobi(double **A, int toPrint){
             }
         }
         count++; /*iterations count*/
-    }
+        }
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
 
     if (toPrint==0) { /*if further calculations are necessary*/
@@ -562,7 +565,7 @@ int eigengapHeuristic(){
     eigenGaps = (double *)calloc(numOfVectors - 1, sizeof(double));
     for (i = 0; i < numOfVectors - 1; i++) {
         /*calculates eigen gaps*/
-        eigenGaps[i] = abs(eigenVals[i]-eigenVals[i+1]);
+        eigenGaps[i] = fabs(eigenVals[i]-eigenVals[i+1]);
     }
     limit = floor(numOfVectors / 2);
     for (i = 0; i < limit; i++) { /*finds k*/

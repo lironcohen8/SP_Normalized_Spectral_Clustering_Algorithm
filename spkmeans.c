@@ -367,9 +367,9 @@ int* maxOffDiagonalValue(double** mat){
     return res; /*returns as a tuple (i,j)*/
 }
 
-double calcTheta(int i, int j){
+double calcTheta(double **matrix, int i, int j){
     /*calcs theta as part os jacobi computations*/
-    return (lnorm[j][j]-lnorm[i][i])/(2*lnorm[i][j]);
+    return (matrix[j][j]-matrix[i][i])/(2*matrix[i][j]);
 }
 
 double calcT(double theta){
@@ -466,16 +466,14 @@ void printJacobi(double **A, double **V) {
     }
 }
 
-double** jacobi(int toPrint){
+double** jacobi(double **A, int toPrint){
     /*calculates jacobi iterations until convergence*/
     int count = 0;
     int isConverged = 0;
     int* maxValInd;
-    int i, maxRow, maxCol;
+    int i, j, maxRow, maxCol;
     double theta, t, c, s;
-    double **A, **APrime, **P;
-
-    A = laplacianNorm(); /*starting A is lnorm matrix*/
+    double **APrime, **P;
 
     APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     assert(APrime != NULL);
@@ -495,25 +493,30 @@ double** jacobi(int toPrint){
         V[i][i] = 1; /*init V as I matrix for מeutrality to multiplication*/
     }
 
-    do {
-        maxValInd = maxOffDiagonalValue(A);
+    do {        
+        maxValInd = maxOffDiagonalValue(A);        
         maxRow = maxValInd[0];
         maxCol = maxValInd[1];
-        theta = calcTheta(maxRow, maxCol);
+        theta = calcTheta(A, maxRow, maxCol);
         t = calcT(theta);
         c = calcC(t);
         s = calcS(t, c);
 
+
         P = createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
         V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
         updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
+
         isConverged = checkConvergence(A, APrime); /*checks convergence*/
-        A = APrime;
+        /* A = APrime, deep clone */
+        for (i = 0; i < numOfVectors; i++) {
+            for (j = 0; j < numOfVectors; j++) {
+                A[i][j] = APrime[i][j];
+            }
+        }
         count++; /*iterations count*/
     }
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
-
-    printMatrix(A);
 
     if (toPrint==0) { /*if further calculations are necessary*/
         return A;
@@ -551,7 +554,7 @@ int eigengapHeuristic(){
     int i, limit, maxGap, k;
     double **A;
     eigenVals = (double *)calloc(numOfVectors, sizeof(double));
-    A = jacobi(0); /*not for printing*/
+    A = jacobi(laplacianNorm(), 0); /*not for printing*/
     for (i = 0; i < numOfVectors; i++) {
         eigenVals[i] = A[i][i]; /*eigenvals are on the diagonal line*/
     }
@@ -644,7 +647,7 @@ int main(int argc, char *argv[]) {
         printMatrix(laplacianNorm());
     } 
     else if (strcmp(goal,"jacobi")==0){
-        jacobi(1);
+        jacobi(vectors, 1);
     } 
     else{
         assert(0==1); /*If the goal is unknown*/

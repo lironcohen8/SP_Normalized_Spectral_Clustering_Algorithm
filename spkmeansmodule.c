@@ -4,6 +4,11 @@
 #include <assert.h>
 #include "spkmeans.c"
 
+int k, max_iter, dimension, numOfVectors = 0, changes = 1;
+float rawK, rawMaxIter;
+double **vectors, **centroids;
+int **clusters, *clustersSizes;
+
 static PyObject* fit(PyObject *self, PyObject *args){
     int i, j;
     int counter = 1;
@@ -76,8 +81,8 @@ static PyMethodDef kmeansMethods[] = {
 
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "mykmeanssp",     // name of module exposed to Python
-    "mykmeanssp Python wrapper for custom C extension library.", // module documentation
+    "spkmeasns",     // name of module exposed to Python
+    "spkmeasns Python wrapper for custom C extension library.", // module documentation
     -1,
     kmeansMethods
 };

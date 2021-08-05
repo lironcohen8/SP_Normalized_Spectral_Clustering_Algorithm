@@ -4,10 +4,10 @@ import pandas as pd
 import numpy as np
 import spkmeans
 
-def isPositiveInt(s):
+def isNoneNegativeInt(s):
     try:
         i = int(s)
-        return i>0 
+        return i>=0 
     except:
         return False
 
@@ -81,42 +81,28 @@ def printResult(initialCentroidsIndices, centroids):
 def main(max_iter=300):
     #Checks if we have the right amount of args
     numOfArgs = len(sys.argv)
-    assert numOfArgs==4 or numOfArgs==5, "Incorrect number of arguments" 
+    assert numOfArgs==4, "Incorrect number of arguments" 
     
-    #Check if k>0 and type(k)=int
-    assert isPositiveInt(sys.argv[1]), "'k' is not a positive int" 
+    #Check if k>=0 and type(k)=int
+    assert isNoneNegativeInt(sys.argv[1]), "'k' is not a positive int" 
     k = int(sys.argv[1])
-
-    #Check if max_iter>0 and type(max_iter)=int
-    #Get max_iter / file_name_1 / file_name_2
-    if numOfArgs == 5:
-        assert isPositiveInt(sys.argv[2]), "'max_iter' is not an positive int" 
-        max_iter = int(sys.argv[2])
-        file_name_1 = sys.argv[3]
-        file_name_2 = sys.argv[4]
-        
-    else:
-        file_name_1 = sys.argv[2]
-        file_name_2 = sys.argv[3]
     
-    #Read both data files and merge them
-    df1 = pd.read_csv(file_name_1, index_col=0, header=None).sort_index()
-    df2 = pd.read_csv(file_name_2, index_col=0, header=None).sort_index()
-    vectors = df1.merge(df2, left_index=True, right_index=True)
-    vectors.index = vectors.index.astype('int64')
+    data = pd.read_csv(sys.argv[3], index_col=0, header=None)
+
+    goal = sys.argv[2]
     
     #Calculate numOfVectors=N and dimension=d
-    numOfVectors = vectors.shape[0]
-    dimension = vectors.shape[1]
+    numOfVectors = data.shape[0]
+    dimension = data.shape[1]
     
     #Initiate the centroids list
-    initialCentroidsIndices, initialcentroids = initCentroids(vectors.index, vectors.values, k, numOfVectors, dimension)
+    initialCentroidsIndices, initialcentroids = initCentroids(data.index, data.values, k, numOfVectors, dimension)
     
     #Transform the vectors to list of lists
-    vectors = vectors.values.tolist()
+    data = data.values.tolist()
 
     #Run the C part
-    centroids = spkmeans.fit(initialcentroids, k, max_iter, vectors, numOfVectors, dimension)
+    centroids = spkmeans.fit(initialcentroids, k, max_iter, data, numOfVectors, dimension)
     printResult(initialCentroidsIndices, centroids)
 
 

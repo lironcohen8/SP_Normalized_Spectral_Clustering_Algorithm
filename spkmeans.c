@@ -7,7 +7,7 @@ typedef struct eigenVector {
     int columnIndex;
 } eigenVector; 
 
-int k, dimension, numOfVectors = 0, changes = 1;
+int k, dimension, numOfVectors = 0, changes = 1, max_iter = 300;
 float rawK, rawMaxIter;
 double *eigenVals, *eigenGaps;
 double **vectors, **centroids, **wam, **ddg, **lnorm, **V, **U;
@@ -658,7 +658,7 @@ void printVectors() {
 int main(int argc, char *argv[]) {
     FILE *file;
     char *goal;
-    int counter = 1, max_iter = 300;
+    int counter = 1;
     
     errorsAssert(argc == 4,1); /*Checks if we have the right amount of args*/ 
     

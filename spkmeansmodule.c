@@ -4,11 +4,13 @@
 #include <assert.h>
 #include "spkmeans.c"
 
+/*
 int k, max_iter, dimension, numOfVectors = 0, changes = 1;
 float rawK, rawMaxIter;
 char *goal;
 double **vectors, **centroids;
 int **clusters, *clustersSizes;
+*/
 
 static void freeMemory() {
     free(vectors);
@@ -20,15 +22,13 @@ static void freeMemory() {
 static PyObject* fit(PyObject *self, PyObject *args){
     int i, j;
     int counter = 1;
-    char tempChar;
     PyObject *pyCentroids;
     PyObject *pyVectors;
-    PyObject *pyGoal;
     PyObject *tempVec = NULL;
     PyObject *tempCentroid = NULL;
     PyObject *resCentroids;
 
-    if (!PyArg_ParseTuple(args,"OiiOOii",&pyCentroids, &k, &max_iter, &pyVectors, &pyGoal, &numOfVectors, &dimension)){
+    if (!PyArg_ParseTuple(args,"OiiOsii",&pyCentroids, &k, &max_iter, &pyVectors, &goal, &numOfVectors, &dimension)){
         return NULL;
     }
     
@@ -55,17 +55,7 @@ static PyObject* fit(PyObject *self, PyObject *args){
         }
     } 
 
-    goal = (char *)calloc(6, sizeof(char));
-    errorAssert(goal != NULL,0);
-
-    tempChar = PyList_GetItem(pyGoal,0);
-    i = 0;
-    while (tempChar != '\0') {
-        goal[i] = tempChar;
-        tempChar = PyList_GetItem(pyGoal,++i);
-    } 
-
-     if (strcmp(goal,"spk")==0){
+    if (strcmp(goal,"spk")==0){
         int calcK = eigengapHeuristic();
         if (k==0) {
             k = calcK;
@@ -74,7 +64,7 @@ static PyObject* fit(PyObject *self, PyObject *args){
         assignUToVectors();
         initCentroids();
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
-        errorsAssert(clusters != NULL,0);
+        errorAssert(clusters != NULL,0);
         while ((counter <= max_iter) && (changes > 0)) {
             assignVectorToCluster();
             updateCentroidValue();
@@ -84,27 +74,27 @@ static PyObject* fit(PyObject *self, PyObject *args){
     else if (strcmp(goal,"wam")==0){
         printMatrix(weightedAdjacencyMatrix(),numOfVectors,numOfVectors);
         freeMemory();
-        return NULL;
+        Py_RETURN_NONE;
     } 
     else if (strcmp(goal,"ddg")==0){
         printMatrix(diagonalDegreeMatrix(1,1),numOfVectors,numOfVectors);
         freeMemory();
-        return NULL;
+        Py_RETURN_NONE;
     } 
     else if (strcmp(goal,"lnorm")==0){
         printMatrix(laplacianNorm(),numOfVectors,numOfVectors);
         freeMemory();
-        return NULL;
+        Py_RETURN_NONE;
     } 
     else if (strcmp(goal,"jacobi")==0){
         jacobi(vectors, 1);
         freeMemory();
-        return NULL;
+        Py_RETURN_NONE;
     } 
     else{
-        errorsAssert(0==1,1); /*If the goal is unknown*/
+        errorAssert(0==1,1); /*If the goal is unknown*/
         freeMemory();
-        return NULL;
+        Py_RETURN_NONE;
     }
 
     resCentroids = PyList_New(0);

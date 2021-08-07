@@ -87,7 +87,7 @@ def main(max_iter=300):
     assert isNoneNegativeInt(sys.argv[1]), "'k' is not a positive int" 
     k = int(sys.argv[1])
     
-    data = pd.read_csv(sys.argv[3], index_col=0, header=None)
+    data = pd.read_csv(sys.argv[3], header=None)
 
     goal = sys.argv[2]
     
@@ -103,7 +103,8 @@ def main(max_iter=300):
 
     #Run the C part
     centroids = spkmeans.fit(initialcentroids, k, max_iter, data, goal, numOfVectors, dimension)
-    printResult(initialCentroidsIndices, centroids)
+    if (goal=="spk"):
+        printResult(initialCentroidsIndices, centroids)
 
 
 if __name__ == "__main__":

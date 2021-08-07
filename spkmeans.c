@@ -12,6 +12,7 @@ float rawK, rawMaxIter;
 double *eigenVals, *eigenGaps;
 double **vectors, **centroids, **wam, **ddg, **lnorm, **V, **U;
 int **clusters, *clustersSizes;
+char *goal;
 eigenVector *eigenVectors;
 
 void *calloc(size_t nitems, size_t size);
@@ -24,7 +25,7 @@ int strcmp (const char* str1, const char* str2);
 void qsort(void *base, size_t nmemb, size_t size,
            int (*compar)(const void *, const void *));
 
-void errorsAssert(int cond, int isInputError) {
+void errorAssert(int cond, int isInputError) {
     if (!cond) {
         if (isInputError==1) {
             printf("Invalid Input!");
@@ -59,9 +60,9 @@ void readFile(FILE *file) {
     char *vectorStr, buffer[1000];
     double **tmp;
     vectorStr = (char *)calloc(dimension, 100*sizeof(char));
-    errorsAssert(vectorStr != NULL,0);
+    errorAssert(vectorStr != NULL,0);
     vectors = (double **)malloc(1 * sizeof(*vectors));
-    errorsAssert(vectors != NULL,0);
+    errorAssert(vectors != NULL,0);
     fgets(buffer,1000,file);
     dimension = calcDimension(buffer);
     do {
@@ -73,7 +74,7 @@ void readFile(FILE *file) {
         vectorStr = strtok(buffer, ",");
         j = 0;
         vectors[numOfVectors] = (double *)calloc(dimension, sizeof(double)); 
-        errorsAssert(vectors[numOfVectors] != NULL,0);
+        errorAssert(vectors[numOfVectors] != NULL,0);
         while (vectorStr != NULL) {
             vectors[numOfVectors][j] = atof(vectorStr);
             vectorStr = strtok(NULL, ",");
@@ -90,10 +91,10 @@ void assignUToVectors() {
     int i;
     free(vectors);
     vectors = (double **)calloc(numOfVectors, k * sizeof(double));
-    errorsAssert(vectors != NULL,0);
+    errorAssert(vectors != NULL,0);
     for (i = 0; i < k; i++) {
         vectors[i] = (double *)calloc(k, sizeof(double)); 
-        errorsAssert(vectors[i] != NULL,0);
+        errorAssert(vectors[i] != NULL,0);
     }
     vectors = U;
 }
@@ -102,11 +103,11 @@ void initCentroids() {
     /*Initialize the clusters and their centroids from the first K vectors*/
     int i,j;
     centroids = (double **)calloc(k, dimension*sizeof(double));
-    errorsAssert(centroids != NULL,0);
-    errorsAssert(k < numOfVectors,0);
+    errorAssert(centroids != NULL,0);
+    errorAssert(k < numOfVectors,0);
     for (i = 0; i < k; i++) {
         centroids[i] = (double *)calloc(dimension, sizeof(double)); 
-        errorsAssert(centroids[i] != NULL,0);
+        errorAssert(centroids[i] != NULL,0);
         for (j = 0; j < dimension; j++) {
             centroids[i][j] = vectors[i][j];
         }
@@ -147,12 +148,12 @@ void assignVectorToCluster() {
     int i, newCentroidInd, clusterSize;
     int * cluster;
     clustersSizes = (int *)calloc(k, sizeof(int));
-    errorsAssert(clustersSizes != NULL,0);
+    errorAssert(clustersSizes != NULL,0);
 
     /*Clearing all clusters (we do not want to remember what was here)*/
     for (i = 0; i < k; i++) { 
         clusters[i] = (int *)calloc(numOfVectors, sizeof(int));
-        errorsAssert(clusters[i] != NULL,0);
+        errorAssert(clusters[i] != NULL,0);
     }
         
     for (i = 0; i < numOfVectors; i++) {
@@ -169,7 +170,7 @@ double* calcCentroidForCluster(int clusterInd) {
     int numOfVectorsInCluster, i, j;
     int * cluster;
     double * sumVector = (double *)calloc(dimension, sizeof(double));
-    errorsAssert(sumVector != NULL,0);
+    errorAssert(sumVector != NULL,0);
     numOfVectorsInCluster = clustersSizes[clusterInd];
     cluster = clusters[clusterInd];
     
@@ -245,10 +246,10 @@ double** matrixMultiplication(double** a, double** b){
     /*gets two matrixes and multiplies them*/
     int i,j,k;
     double** mul = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorsAssert(mul != NULL,0);
+    errorAssert(mul != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         mul[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorsAssert(mul[i] != NULL,0);
+        errorAssert(mul[i] != NULL,0);
     }
 
     for(i = 0; i < numOfVectors; i++){    
@@ -265,7 +266,8 @@ double** matrixMultiplication(double** a, double** b){
 
 void squareMatrixTranspose(double **matrix, int numOfRows) {
     /*transpose a squared matrix*/
-    int i,j,tmp;
+    int i,j;
+    double tmp;
     for (i = 1; i < numOfRows; i++) {
         for (j = 0; j < i; j++) {
             tmp = matrix[i][j];
@@ -294,10 +296,10 @@ double** weightedAdjacencyMatrix(){
     int i, j;
 
     wam = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorsAssert(wam != NULL,0);
+    errorAssert(wam != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         wam[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorsAssert(wam[i] != NULL,0);
+        errorAssert(wam[i] != NULL,0);
     }
 
     for (i = 0; i < numOfVectors; i++){
@@ -321,10 +323,10 @@ double** diagonalDegreeMatrix(int calcWam, int toPrint){
     }
 
     ddg = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorsAssert(ddg != NULL,0);
+    errorAssert(ddg != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         ddg[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorsAssert(ddg[i] != NULL,0);
+        errorAssert(ddg[i] != NULL,0);
     }
 
     for (i = 0; i < numOfVectors; i++) {
@@ -352,10 +354,10 @@ double** laplacianNorm(){
     ddg = diagonalDegreeMatrix(0,0); /*calling ddg without the need to calculate wam*/
 
     lnorm = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorsAssert(lnorm != NULL,0);
+    errorAssert(lnorm != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         lnorm[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorsAssert(lnorm[i] != NULL,0);
+        errorAssert(lnorm[i] != NULL,0);
     }
 
     /*multiplies according to formula*/
@@ -505,18 +507,18 @@ double** jacobi(double **A, int toPrint){
     double **APrime, **P;
 
     APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorsAssert(APrime != NULL,0);
+    errorAssert(APrime != NULL,0);
     P = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorsAssert(P != NULL,0);
+    errorAssert(P != NULL,0);
     V = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorsAssert(V != NULL,0);
+    errorAssert(V != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         APrime[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorsAssert(APrime[i] != NULL,0);
+        errorAssert(APrime[i] != NULL,0);
         P[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorsAssert(P[i] != NULL,0);
+        errorAssert(P[i] != NULL,0);
         V[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorsAssert(V[i] != NULL,0);
+        errorAssert(V[i] != NULL,0);
     }
 
     for (i = 0; i < numOfVectors; i++) { 
@@ -561,8 +563,13 @@ int compareEigenVectors(const void *a, const void *b) {
     /*comperator of vectors for quicksort*/
     struct eigenVector *eva = (struct eigenVector *) a;
     struct eigenVector *evb = (struct eigenVector *) b;
-    int diff = eva->eigenVal - evb->eigenVal; /*by eigen values*/
-    return diff != 0 ? diff : eva->columnIndex - evb->columnIndex; /*then, by index*/
+    double diff = eva->eigenVal - evb->eigenVal; /*by eigen values*/
+    if (diff==0){
+        return eva->columnIndex - evb->columnIndex; /*then, by index*/
+    }
+    else{
+        return diff>0 ? 1 : -1; 
+    }    
 }
 
 void sortEigenVectorsAndValues() {
@@ -570,7 +577,7 @@ void sortEigenVectorsAndValues() {
     and sorts eigen values accordingly*/
     int i;
     eigenVectors = (eigenVector *)calloc(numOfVectors, numOfVectors*sizeof(eigenVector));
-    errorsAssert(eigenVectors != NULL,0);
+    errorAssert(eigenVectors != NULL,0);
     for (i = 0; i < numOfVectors; i++) { /*sets eigenvector's attributes*/
         eigenVectors[i].columnIndex = i;
         eigenVectors[i].eigenVal = eigenVals[i];
@@ -585,7 +592,8 @@ void sortEigenVectorsAndValues() {
 
 int eigengapHeuristic(){
     /*calculates eigengaps for eigengap heuristic and calculates k*/
-    int i, limit, maxGap, k;
+    int i, limit, k;
+    double maxGap = -1.0;
     double **A;
     eigenVals = (double *)calloc(numOfVectors, sizeof(double));
     A = jacobi(laplacianNorm(), 0); /*not for printing*/
@@ -598,7 +606,7 @@ int eigengapHeuristic(){
         /*calculates eigen gaps*/
         eigenGaps[i] = fabs(eigenVals[i]-eigenVals[i+1]);
     }
-    limit = floor(numOfVectors / 2);
+    limit = (int) floor(numOfVectors / 2);
     for (i = 0; i < limit; i++) { /*finds k*/
         if (eigenGaps[i] > maxGap) {
             maxGap = eigenGaps[i];
@@ -629,10 +637,10 @@ void createUMatrix() {
     squareMatrixTranspose(V, numOfVectors); /*in order to place vectors as rows*/
 
     U = (double **)calloc(numOfVectors, k*sizeof(double));
-    errorsAssert(U != NULL,0);
+    errorAssert(U != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         U[i] = (double *)calloc(k, sizeof(double));
-        errorsAssert(U[i] != NULL,0);
+        errorAssert(U[i] != NULL,0);
         for (j = 0; j < k; j++){
             /*takes relevant part of vectors and puts it as a column*/
             U[i][j] = V[eigenVectors[j].columnIndex][i]; 
@@ -657,14 +665,13 @@ void printVectors() {
 
 int main(int argc, char *argv[]) {
     FILE *file;
-    char *goal;
     int counter = 1;
     
-    errorsAssert(argc == 4,1); /*Checks if we have the right amount of args*/ 
+    errorAssert(argc == 4,1); /*Checks if we have the right amount of args*/ 
     
-    errorsAssert(sscanf(argv[1], "%f", &rawK) == 1,1);
+    errorAssert(sscanf(argv[1], "%f", &rawK) == 1,1);
     k = (int)rawK;
-    errorsAssert(rawK - k == 0 && k >= 0,1); /*checks if k is a non-negative int*/
+    errorAssert(rawK - k == 0 && k >= 0,1); /*checks if k is a non-negative int*/
     
     file = fopen(argv[3],"r");
     readFile(file);
@@ -680,7 +687,7 @@ int main(int argc, char *argv[]) {
         assignUToVectors();
         initCentroids();
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
-        errorsAssert(clusters != NULL,0);
+        errorAssert(clusters != NULL,0);
         while ((counter <= max_iter) && (changes > 0)) {
             assignVectorToCluster();
             updateCentroidValue();
@@ -701,7 +708,7 @@ int main(int argc, char *argv[]) {
         jacobi(vectors, 1);
     } 
     else{
-        errorsAssert(0==1,1); /*If the goal is unknown*/
+        errorAssert(0==1,1); /*If the goal is unknown*/
     }
         
     free(vectors);

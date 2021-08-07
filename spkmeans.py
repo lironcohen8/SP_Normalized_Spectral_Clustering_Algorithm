@@ -102,7 +102,7 @@ def main(max_iter=300):
     data = data.values.tolist()
 
     #Run the C part
-    centroids = spkmeans.fit(initialcentroids, k, max_iter, data, numOfVectors, dimension)
+    centroids = spkmeans.fit(initialcentroids, k, max_iter, data, goal, numOfVectors, dimension)
     printResult(initialCentroidsIndices, centroids)
 
 

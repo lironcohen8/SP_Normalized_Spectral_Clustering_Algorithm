@@ -6,30 +6,40 @@
 
 int k, max_iter, dimension, numOfVectors = 0, changes = 1;
 float rawK, rawMaxIter;
+char *goal;
 double **vectors, **centroids;
 int **clusters, *clustersSizes;
+
+static void freeMemory() {
+    free(vectors);
+    free(centroids);
+    free(clusters);
+    free(clustersSizes);
+}
 
 static PyObject* fit(PyObject *self, PyObject *args){
     int i, j;
     int counter = 1;
+    char tempChar;
     PyObject *pyCentroids;
     PyObject *pyVectors;
+    PyObject *pyGoal;
     PyObject *tempVec = NULL;
     PyObject *tempCentroid = NULL;
     PyObject *resCentroids;
 
-    if (!PyArg_ParseTuple(args,"OiiOii",&pyCentroids, &k, &max_iter, &pyVectors, &numOfVectors, &dimension)){
+    if (!PyArg_ParseTuple(args,"OiiOOii",&pyCentroids, &k, &max_iter, &pyVectors, &pyGoal, &numOfVectors, &dimension)){
         return NULL;
     }
     
     vectors = (double **)calloc(numOfVectors, dimension*sizeof(double));
-    assert(vectors != NULL);
+    errorAssert(vectors != NULL,0);
     centroids = (double **)calloc(k, dimension*sizeof(double));
-    assert(centroids != NULL);
+    errorAssert(centroids != NULL,0);
     
     for (i = 0; i < k; i++) {
         centroids[i] = (double *)calloc(dimension, sizeof(double));
-        assert(centroids[i] != NULL);
+        errorAssert(centroids[i] != NULL,0);
         tempVec = PyList_GetItem(pyCentroids,i);
         for (j = 0; j < dimension; j++) {
             centroids[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
@@ -38,19 +48,63 @@ static PyObject* fit(PyObject *self, PyObject *args){
 
     for (i = 0; i < numOfVectors; i++) {
         vectors[i] = (double *)calloc(dimension, sizeof(double));
-        assert(vectors[i] != NULL);
+        errorAssert(vectors[i] != NULL,0);
         tempVec = PyList_GetItem(pyVectors,i);
         for (j = 0; j < dimension; j++) {
             vectors[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
         }
     } 
 
-    clusters = (int **)calloc(k, numOfVectors*sizeof(int));
-    assert(clusters != NULL);
-    while ((counter<=max_iter) && (changes > 0)) {
-        assignVectorToCluster();
-        updateCentroidValue();
-        counter += 1;
+    goal = (char *)calloc(6, sizeof(char));
+    errorAssert(goal != NULL,0);
+
+    tempChar = PyList_GetItem(pyGoal,0);
+    i = 0;
+    while (tempChar != '\0') {
+        goal[i] = tempChar;
+        tempChar = PyList_GetItem(pyGoal,++i);
+    } 
+
+     if (strcmp(goal,"spk")==0){
+        int calcK = eigengapHeuristic();
+        if (k==0) {
+            k = calcK;
+        }
+        createUMatrix();
+        assignUToVectors();
+        initCentroids();
+        clusters = (int **)calloc(k, numOfVectors*sizeof(int));
+        errorsAssert(clusters != NULL,0);
+        while ((counter <= max_iter) && (changes > 0)) {
+            assignVectorToCluster();
+            updateCentroidValue();
+            counter += 1;
+        }
+    }
+    else if (strcmp(goal,"wam")==0){
+        printMatrix(weightedAdjacencyMatrix(),numOfVectors,numOfVectors);
+        freeMemory();
+        return NULL;
+    } 
+    else if (strcmp(goal,"ddg")==0){
+        printMatrix(diagonalDegreeMatrix(1,1),numOfVectors,numOfVectors);
+        freeMemory();
+        return NULL;
+    } 
+    else if (strcmp(goal,"lnorm")==0){
+        printMatrix(laplacianNorm(),numOfVectors,numOfVectors);
+        freeMemory();
+        return NULL;
+    } 
+    else if (strcmp(goal,"jacobi")==0){
+        jacobi(vectors, 1);
+        freeMemory();
+        return NULL;
+    } 
+    else{
+        errorsAssert(0==1,1); /*If the goal is unknown*/
+        freeMemory();
+        return NULL;
     }
 
     resCentroids = PyList_New(0);
@@ -61,12 +115,8 @@ static PyObject* fit(PyObject *self, PyObject *args){
         }
         PyList_Append(resCentroids, tempCentroid);
     }
-    
-    free(vectors);
-    free(centroids);
-    free(clusters);
-    free(clustersSizes);
-    
+      
+    freeMemory();
     return resCentroids;
 }
 
@@ -77,7 +127,6 @@ static PyMethodDef kmeansMethods[] = {
     PyDoc_STR("Kmeans")},
     {NULL, NULL, 0, NULL}
 };
-
 
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,

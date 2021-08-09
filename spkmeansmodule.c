@@ -62,7 +62,6 @@ static PyObject* fit(PyObject *self, PyObject *args){
         }
         createUMatrix();
         assignUToVectors();
-        initCentroids();
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
         errorAssert(clusters != NULL,0);
         while ((counter <= max_iter) && (changes > 0)) {

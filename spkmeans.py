@@ -86,7 +86,9 @@ def main(max_iter=300):
     #Check if k>=0 and type(k)=int
     assert isNoneNegativeInt(sys.argv[1]), "'k' is not a positive int" 
     k = int(sys.argv[1])
-    
+    if (k==0): 
+        k = spkmeans.eigengapHeuristic()
+        
     data = pd.read_csv(sys.argv[3], header=None)
 
     goal = sys.argv[2]

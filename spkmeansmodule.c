@@ -25,10 +25,10 @@ static PyObject* getTMAtrixAsPyObject(){
     PyObject *temp = NULL;
 
     pyTMatrix = PyList_New(0);
-    for (i=0; i<k; i++){
-        pyTMatrix = PyList_New(0);
-        for (j=0; j<dimension; j++){
-            PyList_Append(pyTMatrix,PyFloat_FromDouble(U[i][j]));
+    for (i=0; i<numOfVectors; i++){
+        temp = PyList_New(0);
+        for (j=0; j<k; j++){
+            PyList_Append(temp,PyFloat_FromDouble(U[i][j]));
         }
         PyList_Append(pyTMatrix, temp);
     }
@@ -42,7 +42,7 @@ static PyObject* initiateTMatrixAndK(PyObject *self, PyObject *args){
     PyObject *tempVec = NULL;
     PyObject *result = PyList_New(2);
 
-    if (!PyArg_ParseTuple(args,"Oiii", &k, &pyVectors, &numOfVectors, &dimension)){
+    if (!PyArg_ParseTuple(args,"Oiii", &pyVectors, &k, &numOfVectors, &dimension)){
         return NULL;
     }
     
@@ -54,7 +54,7 @@ static PyObject* initiateTMatrixAndK(PyObject *self, PyObject *args){
         errorAssert(vectors[i] != NULL,0);
         tempVec = PyList_GetItem(pyVectors,i);
         for (j = 0; j < dimension; j++) {
-            vectors[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
+            vectors[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j)); 
         }
     } 
     

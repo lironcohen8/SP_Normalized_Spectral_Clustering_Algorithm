@@ -96,7 +96,8 @@ def main(max_iter=300):
     dimension = data.shape[1]
     
     #Create the new T matrix and calc the new k if k==0
-    data, k = spkmeans.initiateTMatrixAndK(data, k, numOfVectors, dimension)
+    data, k = spkmeans.initiateTMatrixAndK(data.values.tolist(), k, numOfVectors, dimension)
+    data = pd.DataFrame(data)
     numOfVectors = data.shape[0]
     dimension = data.shape[1]
     

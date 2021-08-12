@@ -19,6 +19,59 @@ static void freeMemory() {
     free(clustersSizes);
 }
 
+static PyObject* getTMAtrixAsPyObject(){
+    int i,j;
+    PyObject *pyTMatrix = NULL;
+    PyObject *temp = NULL;
+
+    pyTMatrix = PyList_New(0);
+    for (i=0; i<k; i++){
+        pyTMatrix = PyList_New(0);
+        for (j=0; j<dimension; j++){
+            PyList_Append(pyTMatrix,PyFloat_FromDouble(U[i][j]));
+        }
+        PyList_Append(pyTMatrix, temp);
+    }
+
+    return pyTMatrix;
+}
+
+static PyObject* initiateTMatrixAndK(PyObject *self, PyObject *args){
+    int i,j;
+    PyObject *pyVectors;
+    PyObject *tempVec = NULL;
+    PyObject *result = PyList_New(2);
+
+    if (!PyArg_ParseTuple(args,"Oiii", &k, &pyVectors, &numOfVectors, &dimension)){
+        return NULL;
+    }
+    
+    vectors = (double **)calloc(numOfVectors, dimension*sizeof(double));
+    errorAssert(vectors != NULL,0);
+    
+    for (i = 0; i < numOfVectors; i++) {
+        vectors[i] = (double *)calloc(dimension, sizeof(double));
+        errorAssert(vectors[i] != NULL,0);
+        tempVec = PyList_GetItem(pyVectors,i);
+        for (j = 0; j < dimension; j++) {
+            vectors[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
+        }
+    } 
+    
+    int calcK = eigengapHeuristic();
+    if (k==0) {
+        k = calcK;
+    }
+    createUMatrix();
+    assignUToVectors();
+
+    /*Create the result list*/
+    PyList_SetItem(result,0,getTMAtrixAsPyObject());
+    PyList_SetItem(result,1,Py_BuildValue("i",k));
+
+    return result;
+}
+
 static PyObject* fit(PyObject *self, PyObject *args){
     int i, j;
     int counter = 1;
@@ -26,7 +79,7 @@ static PyObject* fit(PyObject *self, PyObject *args){
     PyObject *pyVectors;
     PyObject *tempVec = NULL;
     PyObject *tempCentroid = NULL;
-    PyObject *resCentroids;
+    PyObject *resCentroids = NULL;
 
     if (!PyArg_ParseTuple(args,"OiiOsii",&pyCentroids, &k, &max_iter, &pyVectors, &goal, &numOfVectors, &dimension)){
         return NULL;
@@ -56,12 +109,6 @@ static PyObject* fit(PyObject *self, PyObject *args){
     } 
 
     if (strcmp(goal,"spk")==0){
-        int calcK = eigengapHeuristic();
-        if (k==0) {
-            k = calcK;
-        }
-        createUMatrix();
-        assignUToVectors();
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
         errorAssert(clusters != NULL,0);
         while ((counter <= max_iter) && (changes > 0)) {
@@ -112,6 +159,10 @@ static PyObject* fit(PyObject *self, PyObject *args){
 static PyMethodDef kmeansMethods[] = {
     {"fit",
     (PyCFunction) fit,
+    METH_VARARGS,
+    PyDoc_STR("Kmeans")},
+    {"initiateTMatrixAndK",
+    (PyCFunction) initiateTMatrixAndK,
     METH_VARARGS,
     PyDoc_STR("Kmeans")},
     {NULL, NULL, 0, NULL}

@@ -86,9 +86,7 @@ def main(max_iter=300):
     #Check if k>=0 and type(k)=int
     assert isNoneNegativeInt(sys.argv[1]), "'k' is not a positive int" 
     k = int(sys.argv[1])
-    if (k==0): 
-        k = spkmeans.eigengapHeuristic()
-        
+    
     data = pd.read_csv(sys.argv[3], header=None)
 
     goal = sys.argv[2]
@@ -97,7 +95,16 @@ def main(max_iter=300):
     numOfVectors = data.shape[0]
     dimension = data.shape[1]
     
+    #Create the new T matrix
+    data = spkmeans.createTMatrix(k, data, numOfVectors, dimension)
+    numOfVectors = data.shape[0]
+    dimension = data.shape[1]
+
     #Initiate the centroids list
+    print(k)
+    if (k==0): 
+        k = spkmeans.calcK(data, numOfVectors, dimension)
+    print(k)
     initialCentroidsIndices, initialcentroids = initCentroids(data.index, data.values, k, numOfVectors, dimension)
     
     #Transform the vectors to list of lists

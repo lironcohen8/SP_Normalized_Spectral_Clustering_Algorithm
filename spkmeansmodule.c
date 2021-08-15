@@ -87,17 +87,6 @@ static PyObject* fit(PyObject *self, PyObject *args){
     
     vectors = (double **)calloc(numOfVectors, dimension*sizeof(double));
     errorAssert(vectors != NULL,0);
-    centroids = (double **)calloc(k, dimension*sizeof(double));
-    errorAssert(centroids != NULL,0);
-    
-    for (i = 0; i < k; i++) {
-        centroids[i] = (double *)calloc(dimension, sizeof(double));
-        errorAssert(centroids[i] != NULL,0);
-        tempVec = PyList_GetItem(pyCentroids,i);
-        for (j = 0; j < dimension; j++) {
-            centroids[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
-        }
-    } 
 
     for (i = 0; i < numOfVectors; i++) {
         vectors[i] = (double *)calloc(dimension, sizeof(double));
@@ -109,6 +98,18 @@ static PyObject* fit(PyObject *self, PyObject *args){
     } 
 
     if (strcmp(goal,"spk")==0){
+        centroids = (double **)calloc(k, dimension*sizeof(double));
+        errorAssert(centroids != NULL,0);
+        
+        for (i = 0; i < k; i++) {
+            centroids[i] = (double *)calloc(dimension, sizeof(double));
+            errorAssert(centroids[i] != NULL,0);
+            tempVec = PyList_GetItem(pyCentroids,i);
+            for (j = 0; j < dimension; j++) {
+                centroids[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
+            }
+        } 
+
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
         errorAssert(clusters != NULL,0);
         while ((counter <= max_iter) && (changes > 0)) {

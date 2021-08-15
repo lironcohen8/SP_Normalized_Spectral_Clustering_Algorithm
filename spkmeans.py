@@ -95,15 +95,17 @@ def main(max_iter=300):
     numOfVectors = data.shape[0]
     dimension = data.shape[1]
     
-    #Create the new T matrix and calc the new k if k==0
-    data, k = spkmeans.initiateTMatrixAndK(data.values.tolist(), k, numOfVectors, dimension)
-    data = pd.DataFrame(data)
-    numOfVectors = data.shape[0]
-    dimension = data.shape[1]
-    
-    #Initiate the centroids list
-    initialCentroidsIndices, initialcentroids = initCentroids(data.index, data.values, k, numOfVectors, dimension)
-    
+    initialcentroids = []
+    if (goal=="spk"):
+        #Create the new T matrix and calc the new k if k==0
+        data, k = spkmeans.initiateTMatrixAndK(data.values.tolist(), k, numOfVectors, dimension)
+        data = pd.DataFrame(data)
+        numOfVectors = data.shape[0]
+        dimension = data.shape[1]
+        
+        #Initiate the centroids list
+        initialCentroidsIndices, initialcentroids = initCentroids(data.index, data.values, k, numOfVectors, dimension)
+        
     #Transform the vectors to list of lists
     data = data.values.tolist()
 

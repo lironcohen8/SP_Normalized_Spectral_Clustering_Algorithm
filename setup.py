@@ -8,8 +8,7 @@ setup(name='spkmeans',
      ext_modules=[
          Extension(
              'spkmeans',  
-             sources = ['spkmeansmodule.c'],
+             sources = ['spkmeans.c','spkmeansmodule.c'],
             )
         ]
     )
-

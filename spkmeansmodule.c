@@ -2,15 +2,7 @@
 #include <Python.h>
 #include <stdio.h>
 #include <assert.h>
-#include "spkmeans.c"
-
-/*
-int k, max_iter, dimension, numOfVectors = 0, changes = 1;
-float rawK, rawMaxIter;
-char *goal;
-double **vectors, **centroids;
-int **clusters, *clustersSizes;
-*/
+#include "spkmeans.h"
 
 static void freeMemory() {
     free(vectors);

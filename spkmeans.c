@@ -1,11 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-
-typedef struct eigenVector {
-    double eigenVal;
-    int columnIndex;
-} eigenVector; 
+#include "spkmeans.h"
 
 int k, dimension, numOfVectors = 0, changes = 1, max_iter = 300;
 float rawK, rawMaxIter;

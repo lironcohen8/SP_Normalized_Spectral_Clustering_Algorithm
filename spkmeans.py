@@ -73,9 +73,9 @@ def printResult(initialCentroidsIndices, centroids):
 
     for i in range(len(centroids)):
         if i==(len(centroids)-1):
-            print(','.join(map(str,centroids[i])),end='')
+            print(','.join(format(x, ".4f") for x in centroids[i]),end='')
         else:
-            print(','.join(map(str,centroids[i])))
+            print(','.join(format(x, ".4f") for x in centroids[i]))
 
 
 def main(max_iter=300):

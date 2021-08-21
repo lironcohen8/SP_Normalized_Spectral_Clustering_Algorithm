@@ -35,7 +35,8 @@ def initCentroids(vectorsIndex, vectors, k, numOfVectors, dimension):
     initialCentroidsIndices = [0 for i in range(k)]
     
     #Get the first centroid
-    i = np.random.randint(0, numOfVectors+1)
+    #i = np.random.randint(0, numOfVectors+1)
+    i = np.random.choice(numOfVectors)
     initialcentroids[0] = vectors[i]
     initialCentroidsIndices[0] = vectorsIndex[i]
     

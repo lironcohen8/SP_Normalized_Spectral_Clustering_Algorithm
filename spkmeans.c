@@ -176,9 +176,12 @@ double* calcCentroidForCluster(int clusterInd) {
         }
     }
 
-    for (i = 0; i < dimension; i++) {
-        sumVector[i] /= numOfVectorsInCluster; /*Replace the sum with the average*/
+    if (numOfVectorsInCluster != 0) {
+        for (i = 0; i < dimension; i++) {
+            sumVector[i] /= numOfVectorsInCluster; /*Replace the sum with the average*/
+        }
     }
+    
     return sumVector;
 }
 

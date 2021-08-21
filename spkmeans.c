@@ -88,7 +88,7 @@ void assignUToVectors() {
     free(vectors);
     vectors = (double **)calloc(numOfVectors, k * sizeof(double));
     errorAssert(vectors != NULL,0);
-    for (i = 0; i < k; i++) {
+    for (i = 0; i < numOfVectors; i++) {
         vectors[i] = (double *)calloc(k, sizeof(double)); 
         errorAssert(vectors[i] != NULL,0);
     }
@@ -617,12 +617,15 @@ void normalizeUMatrix() {
     int i,j;
     double sum;
     for (i = 0; i < numOfVectors; i++){
+        sum = 0;
         for (j = 0; j < k; j++){
             sum += pow(U[i][j],2);
         }
         sum = sqrt(sum);
-        for (j = 0; j < k; j++){
-            U[i][j] = U[i][j] / sum;
+        if (sum != 0){
+            for (j = 0; j < k; j++){
+                U[i][j] = U[i][j] / sum;
+            }
         }
     }
 }
@@ -679,8 +682,11 @@ int main(int argc, char *argv[]) {
         if (k==0) {
             k = calcK;
         }
+        dimension = k;
+
         createUMatrix();
         assignUToVectors();
+
         initCentroids();
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
         errorAssert(clusters != NULL,0);

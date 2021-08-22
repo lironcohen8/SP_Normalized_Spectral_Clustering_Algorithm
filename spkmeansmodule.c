@@ -4,14 +4,14 @@
 #include <assert.h>
 #include "spkmeans.h"
 
-static void freeMemory() {
+static void freeMemory(void) {
     free(vectors);
     free(centroids);
     free(clusters);
     free(clustersSizes);
 }
 
-static PyObject* getTMAtrixAsPyObject(){
+static PyObject* getTMAtrixAsPyObject(void){
     int i,j;
     PyObject *pyTMatrix = NULL;
     PyObject *temp = NULL;
@@ -163,8 +163,8 @@ static PyMethodDef kmeansMethods[] = {
 
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "spkmeasns",     // name of module exposed to Python
-    "spkmeasns Python wrapper for custom C extension library.", // module documentation
+    "spkmeans",     // name of module exposed to Python
+    "spkmeans Python wrapper for custom C extension library.", // module documentation
     -1,
     kmeansMethods
 };

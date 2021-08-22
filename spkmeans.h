@@ -49,5 +49,6 @@ void sortEigenVectorsAndValues(void);
 int eigengapHeuristic(void);
 void normalizeUMatrix(void); 
 void createUMatrix(void);
+void freeMemory(void);
 
 #endif

@@ -81,6 +81,7 @@ void readFile(FILE *file) {
     }
     while (fgets(buffer,1000,file) != NULL);
     free(vectorStr);
+    free(tmp);
 }
 
 void assignUToVectors() {
@@ -201,6 +202,7 @@ void updateCentroidValue() {
             centroids[i][j] = newValue[j];
         }
     }
+    free(newValue);
 }
 
 void deepClone(double **a, double** b){
@@ -539,11 +541,16 @@ double** jacobi(double **A, int toPrint){
         }
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
 
+    free(maxValInd);
+    free(P);
+    free(APrime);
+
     if (toPrint==0) { /*if further calculations are necessary*/
         return A;
     }
     else { /*if goal was jacobi, only need to be printed*/
         printJacobi(A, V);
+        free(A);
         return NULL;
     }
 }  
@@ -557,7 +564,7 @@ int compareEigenVectors(const void *a, const void *b) {
         return eva->columnIndex - evb->columnIndex; /*then, by index*/
     }
     else{
-        return diff>0 ? 1 : -1; 
+        return diff > 0 ? 1 : -1; 
     }    
 }
 
@@ -602,6 +609,7 @@ int eigengapHeuristic(){
             k = i;
         }
     }
+    free(A);
     return k + 1; /*becuase count in intructions starts from 1*/
 }
 
@@ -641,21 +649,52 @@ void createUMatrix() {
     normalizeUMatrix();
 }
 
+void freeMemory() {
+    if (strcmp(goal,"wam")==0){
+        free(wam);
+    }
+    else if (strcmp(goal,"ddg")==0){
+        free(wam);
+        free(ddg);
+    }
+    else if (strcmp(goal,"lnorm")==0){
+        free(wam);
+        free(ddg);
+        free(lnorm);
+    }
+    else if (strcmp(goal,"jacobi")==0){
+        free(V);
+    }
+    else {
+        free(eigenVals);
+        free(eigenGaps);
+        free(vectors);
+        free(centroids);
+        free(wam);
+        free(ddg);
+        free(lnorm);
+        free(U);
+        free(clusters);
+        free(clustersSizes);
+        free(goal);
+        free(eigenVectors);
+    }
+}
+
 int main(int argc, char *argv[]) {
     FILE *file;
     int counter = 1;
-    
+
     errorAssert(argc == 4,1); /*Checks if we have the right amount of args*/ 
     
     errorAssert(sscanf(argv[1], "%f", &rawK) == 1,1);
     k = (int)rawK;
     errorAssert(rawK - k == 0 && k >= 0,1); /*checks if k is a non-negative int*/
-    
+
     file = fopen(argv[3],"r");
     readFile(file);
 
     goal = argv[2];
-
     if (strcmp(goal,"spk")==0){
         int calcK = eigengapHeuristic();
         if (k==0) {
@@ -690,10 +729,7 @@ int main(int argc, char *argv[]) {
     else{
         errorAssert(0==1,1); /*If the goal is unknown*/
     }
-        
-    free(vectors);
-    free(centroids);
-    free(clusters);
-    free(clustersSizes);
+
+    freeMemory();
     return 0;
 }

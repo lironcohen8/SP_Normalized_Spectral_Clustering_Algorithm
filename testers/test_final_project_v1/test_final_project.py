@@ -2,7 +2,9 @@ import math
 import os
 import numpy as np
 from math import e
+import os.path
 
+C_file_name = "hw1"
 
 def get_vectors(filename):
     with open(filename,"r") as f:
@@ -111,48 +113,50 @@ def print_mat(matrix):
 
 if __name__ == "__main__":
     goals = ["wam", "ddg", "lnorm", "jacobi", "spk"]
+    exec = ["python3 spkmeans.py", os.path.join(".", C_file_name)]
     result_file = "tmp.txt"
-    for index in range(10):
-        vectors_filename = f".\\tests\\test{index}.csv"
-        lnorm_filename = f".\\tests\\test{index}_lnorm_output.txt"
+    for index in range(11):
+        vectors_filename = os.path.join(".", "tests", f"test{index}.csv")
+        lnorm_filename = os.path.join(".", "tests", f"test{index}_lnorm_output.txt")
         for goal in goals:
-            # k matter only for spk
-            if goal == "spk":
-                k_values = [0, 3]
-            else:
-                k_values = [0]
-            for k_value in k_values:
-                if goal == "jacobi":
-                    curr_file = lnorm_filename
-                else:
-                    curr_file = vectors_filename
-                os.system(f"python spkmeans.py {k_value} {goal} {curr_file} > {result_file}")
-                vectors = np.array(get_vectors(vectors_filename))
+            for ex in exec:
+                lng = "P" if ex == "python3 spkmeans.py" else "C"
+                # k matter only for spk
                 if goal == "spk":
-                    correct_matrix = get_vectors(f".\\tests\\test{index}_{goal}_{k_value}_output.txt")
+                    k_values = [0, 3]
                 else:
-                    if goal == "wam":
-                        correct_matrix = build_weight_matrix(vectors)
-                    elif goal == "ddg":
-                        correct_matrix = build_diagonal_matrix(vectors)
-                    elif goal == "lnorm":
-                        correct_matrix = build_lnorm_matrix(vectors)
-                    elif goal == "jacobi":
-                        lmatrix = np.array(get_vectors(lnorm_filename))
-                        matrix1, matrix2 = build_jacobi_matrix(lmatrix)
-                        correct_matrix = [[matrix1[i][i] for i in range(len(matrix1))]]
-                        for i in range(len(matrix2)):
-                            correct_matrix.append([matrix2[j][i] for j in range(len(matrix2))])
-                    correct_matrix = np.round(correct_matrix, 4).tolist()
-                print(f"check file={vectors_filename} \tk_value={k_value} \tgoal={goal}")
-                result_matrix = get_vectors(result_file)
+                    k_values = [0]
+                for k_value in k_values:
+                    if goal == "jacobi":
+                        curr_file = lnorm_filename
+                    else:
+                        curr_file = vectors_filename
+                    os.system(f"{ex} {k_value} {goal} {curr_file} > {result_file}")
+                    vectors = np.array(get_vectors(vectors_filename))
+                    if goal == "spk":
+                        correct_matrix = get_vectors(os.path.join(".", "tests", f"test{index}_{goal}_{k_value}_output_{lng}.txt"))
+                    else:
+                        if goal == "wam":
+                            correct_matrix = build_weight_matrix(vectors)
+                        elif goal == "ddg":
+                            correct_matrix = build_diagonal_matrix(vectors)
+                        elif goal == "lnorm":
+                            correct_matrix = build_lnorm_matrix(vectors)
+                        elif goal == "jacobi":
+                            lmatrix = np.array(get_vectors(lnorm_filename))
+                            matrix1, matrix2 = build_jacobi_matrix(lmatrix)
+                            correct_matrix = [[matrix1[i][i] for i in range(len(matrix1))]]
+                            for i in range(len(matrix2)):
+                                correct_matrix.append([matrix2[j][i] for j in range(len(matrix2))])
+                        correct_matrix = np.round(correct_matrix, 4).tolist()
+                    result_matrix = get_vectors(result_file)
+                    res = check_equality(correct_matrix, result_matrix)
+                    res_str = "Passed" if res else "Failed"
+                    print(f"check file={vectors_filename} \tlanguage={lng} \tk_value={k_value} \tgoal={goal} \tResult={res_str}")
 
-                if check_equality(correct_matrix, result_matrix):
-                    print("Test Passed")
-                else:
-                    print("Test Failed")
-                    print("Your output:")
-                    print_mat(result_matrix)
-                    print("correct output:")
-                    print_mat(correct_matrix)
+                    if not res:
+                        print("Your output:")
+                        print_mat(result_matrix)
+                        print("correct output:")
+                        print_mat(correct_matrix)
 

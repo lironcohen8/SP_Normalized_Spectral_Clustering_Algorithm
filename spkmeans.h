@@ -25,8 +25,6 @@ int closestCentroid(double *vector);
 void assignVectorToCluster(void); 
 double* calcCentroidForCluster(int clusterInd);
 void updateCentroidValue(void);
-void printResult(void); 
-
 void deepClone(double **a, double** b);
 void printMatrix(double** mat, int numOfRows, int numOfCols); 
 double** matrixMultiplication(double** a, double** b);
@@ -51,6 +49,5 @@ void sortEigenVectorsAndValues(void);
 int eigengapHeuristic(void);
 void normalizeUMatrix(void); 
 void createUMatrix(void);
-void printVectors(void);
 
 #endif

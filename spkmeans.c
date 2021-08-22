@@ -20,6 +20,7 @@ double atof(const char * str);
 int strcmp (const char* str1, const char* str2);
 void qsort(void *base, size_t nmemb, size_t size,
            int (*compar)(const void *, const void *));
+void exit(int status);
 
 void errorAssert(int cond, int isInputError) {
     if (!cond) {
@@ -29,7 +30,7 @@ void errorAssert(int cond, int isInputError) {
         else {
             printf("An Error Has Occured");
         }
-        assert(0);
+        exit(0);
     }
 }
 
@@ -202,21 +203,6 @@ void updateCentroidValue() {
     }
 }
 
-void printResult() {
-    /*Prints the centroids*/
-    int i, j;
-    for (i = 0; i < k; i++) {
-        for (j = 0; j < dimension; j++) {
-            printf("%.4f", centroids[i][j]); /*Format the floats precision to 4 digits*/
-            if (j < dimension - 1) {
-                printf(",");
-            }
-        }
-        printf("\n");
-    }
-}
-
-
 void deepClone(double **a, double** b){
     /*clones b matrix values to a*/
     int i,j;
@@ -237,7 +223,9 @@ void printMatrix(double** mat, int numOfRows, int numOfCols) {
                 printf(",");
             }
         }
-        printf("\n");
+        if (i < numOfRows - 1) {
+            printf("\n");
+        }
     }
 }
 
@@ -494,7 +482,9 @@ void printJacobi(double **A, double **V) {
                 printf(",");
             }
         }
-        printf("\n");
+        if ( i < numOfVectors - 1) {
+            printf("\n");
+        }
     }
 }
 
@@ -651,20 +641,6 @@ void createUMatrix() {
     normalizeUMatrix();
 }
 
-void printVectors() {
-    /*prints the vectors in vectors matrix*/
-    int i, j;
-    for (i = 0; i < numOfVectors; i++) {
-        for (j = 0; j < dimension; j++) {
-            printf("%.4f", vectors[i][j]); /*format the floats precision to 4 digits*/
-            if (j < dimension - 1) {
-                printf(",");
-            }
-        }
-        printf("\n");
-    }
-}
-
 int main(int argc, char *argv[]) {
     FILE *file;
     int counter = 1;
@@ -689,7 +665,6 @@ int main(int argc, char *argv[]) {
 
         createUMatrix();
         assignUToVectors();
-
         initCentroids();
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
         errorAssert(clusters != NULL,0);
@@ -698,7 +673,7 @@ int main(int argc, char *argv[]) {
             updateCentroidValue();
             counter += 1;
         }
-        printResult();
+        printMatrix(centroids, k, dimension);
     } 
     else if (strcmp(goal,"wam")==0){
         printMatrix(weightedAdjacencyMatrix(),numOfVectors,numOfVectors);

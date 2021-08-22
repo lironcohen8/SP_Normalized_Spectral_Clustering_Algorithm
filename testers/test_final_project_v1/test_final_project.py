@@ -4,7 +4,7 @@ import numpy as np
 from math import e
 import os.path
 
-C_file_name = "hw1"
+C_file_name = "spkmeans"
 
 def get_vectors(filename):
     with open(filename,"r") as f:

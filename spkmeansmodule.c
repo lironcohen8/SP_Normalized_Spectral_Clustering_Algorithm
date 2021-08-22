@@ -163,8 +163,8 @@ static PyMethodDef kmeansMethods[] = {
 
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "spkmeans",     // name of module exposed to Python
-    "spkmeans Python wrapper for custom C extension library.", // module documentation
+    "spkmeans",     /* name of module exposed to Python */
+    "spkmeans Python wrapper for custom C extension library.", /* module documentation */
     -1,
     kmeansMethods
 };

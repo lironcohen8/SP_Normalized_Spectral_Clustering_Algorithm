@@ -59,7 +59,7 @@ void readFile(FILE *file) {
     errorAssert(vectorStr != NULL,0);
     vectors = (double **)malloc(1 * sizeof(*vectors));
     errorAssert(vectors != NULL,0);
-    fgets(buffer,1000,file);
+    errorAssert(fgets(buffer,1000,file) != NULL,0);
     dimension = calcDimension(buffer);
     do {
         if (numOfVectors == sizeFull) {
@@ -591,7 +591,7 @@ void sortEigenVectorsAndValues() {
 
 int eigengapHeuristic(){
     /*calculates eigengaps for eigengap heuristic and calculates k*/
-    int i, limit, k;
+    int i, limit, k=0;
     double maxGap = -1.0;
     double **A;
     eigenVals = (double *)calloc(numOfVectors, sizeof(double));

@@ -4,13 +4,6 @@
 #include <assert.h>
 #include "spkmeans.h"
 
-// static void freeMemory(void) {
-//     free2DDoubleArray(vectors, numOfVectors);
-//     free2DDoubleArray(centroids, numOfVectors);
-//     free2DIntArray(clusters, numOfVectors);
-//     free(clustersSizes);
-// }
-
 static PyObject* getTMAtrixAsPyObject(void){
     int i,j;
     PyObject *pyTMatrix = NULL;
@@ -118,9 +111,8 @@ static PyObject* fit(PyObject *self, PyObject *args){
             }
             PyList_Append(resCentroids, tempCentroid);
         }
-        printf("...");
+
         freeMemory();
-        printf("???");
         return resCentroids;
     }
     else if (strcmp(goal,"wam")==0){

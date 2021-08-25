@@ -114,8 +114,6 @@ def main(max_iter=300):
     if (goal=="spk"):
         printResult(initialCentroidsIndices, centroids)
 
-    print("\n Finished")
-
 
 if __name__ == "__main__":
     main()

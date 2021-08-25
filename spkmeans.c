@@ -688,11 +688,11 @@ void freeMemory() {
         free2DDoubleArray(centroids, k);
         free2DDoubleArray(wam, numOfVectors);
         free2DDoubleArray(ddg, numOfVectors);
-        free2DDoubleArray(lnorm, numOfVectors);
-        free2DDoubleArray(U, numOfVectors);
+        /*free2DDoubleArray(lnorm, numOfVectors);*/
+        /*free2DDoubleArray(U, numOfVectors);*/
         free2DIntArray(clusters, k);
         free(clustersSizes);
-        free(goal);
+        /*free(goal);*/
         free(eigenVectors);
     }
 }
@@ -747,5 +747,6 @@ int main(int argc, char *argv[]) {
     }
 
     freeMemory();
+    printf("\n Finished");
     return 0;
 }

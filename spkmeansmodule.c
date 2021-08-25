@@ -101,7 +101,7 @@ static PyObject* fit(PyObject *self, PyObject *args){
                 centroids[i][j] = PyFloat_AsDouble(PyList_GetItem(tempVec,j));  
             }
         } 
-
+        
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
         errorAssert(clusters != NULL,0);
         while ((counter <= max_iter) && (changes > 0)) {
@@ -109,7 +109,7 @@ static PyObject* fit(PyObject *self, PyObject *args){
             updateCentroidValue();
             counter += 1;
         }
-
+        
         resCentroids = PyList_New(0);
         for (i=0; i<k; i++){
             tempCentroid = PyList_New(0);
@@ -118,8 +118,9 @@ static PyObject* fit(PyObject *self, PyObject *args){
             }
             PyList_Append(resCentroids, tempCentroid);
         }
-      
+        printf("...");
         freeMemory();
+        printf("???");
         return resCentroids;
     }
     else if (strcmp(goal,"wam")==0){

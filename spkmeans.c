@@ -81,6 +81,7 @@ void readFile(FILE *file) {
     }
     while (fgets(buffer,1000,file) != NULL);
     free(vectorStr);
+    fclose(file);
 }
 
 void assignUToVectors() {
@@ -607,7 +608,7 @@ int eigengapHeuristic(){
             k = i;
         }
     }
-    free(A);
+    free2DDoubleArray(A, numOfVectors);
     return k + 1; /*becuase count in intructions starts from 1*/
 }
 

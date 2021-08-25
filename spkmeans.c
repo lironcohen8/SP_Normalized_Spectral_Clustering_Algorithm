@@ -81,13 +81,13 @@ void readFile(FILE *file) {
     }
     while (fgets(buffer,1000,file) != NULL);
     free(vectorStr);
-    free(tmp);
+    free2DDoubleArray(tmp, numOfVectors);
 }
 
 void assignUToVectors() {
     /*put U vectors in vectors matrix for further calculations*/
     int i;
-    free(vectors);
+    free2DDoubleArray(vectors, numOfVectors);
     vectors = (double **)calloc(numOfVectors, k * sizeof(double));
     errorAssert(vectors != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
@@ -456,7 +456,7 @@ double calcOffSquared(double** mat){
 
 int checkConvergence(double** A, double** APrime){
     /*gets A and A' matrixes and checks if their off values are closer than epsilon*/
-    double epsilon = 0.001; /*constant from instructions*/
+    double epsilon = pow(10,-15); /*constant from instructions*/
     double a = calcOffSquared(A);
     double ap = calcOffSquared(APrime);
     
@@ -542,15 +542,15 @@ double** jacobi(double **A, int toPrint){
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
 
     free(maxValInd);
-    free(P);
-    free(APrime);
+    free2DDoubleArray(P, numOfVectors);
+    free2DDoubleArray(APrime, numOfVectors);
 
     if (toPrint==0) { /*if further calculations are necessary*/
         return A;
     }
     else { /*if goal was jacobi, only need to be printed*/
         printJacobi(A, V);
-        free(A);
+        free2DDoubleArray(A, numOfVectors);
         return NULL;
     }
 }  
@@ -649,32 +649,50 @@ void createUMatrix() {
     normalizeUMatrix();
 }
 
+void free2DDoubleArray(double ** arr, int numOfElements) {
+    /*frees memory of 2D array*/
+    int i, j;
+    for (i = 0; i < numOfElements; i++) {
+        free(arr[i]);
+    }
+    free(arr);
+}
+
+void free2DIntArray(int ** arr, int numOfElements) {
+    /*frees memory of 2D array*/
+    int i, j;
+    for (i = 0; i < numOfElements; i++) {
+        free(arr[i]);
+    }
+    free(arr);
+}
+
 void freeMemory() {
     if (strcmp(goal,"wam")==0){
-        free(wam);
+        free2DDoubleArray(wam, numOfVectors);
     }
     else if (strcmp(goal,"ddg")==0){
-        free(wam);
-        free(ddg);
+        free2DDoubleArray(wam, numOfVectors);
+        free2DDoubleArray(ddg, numOfVectors);
     }
     else if (strcmp(goal,"lnorm")==0){
-        free(wam);
-        free(ddg);
-        free(lnorm);
+        free2DDoubleArray(wam, numOfVectors);
+        free2DDoubleArray(ddg, numOfVectors);
+        free2DDoubleArray(lnorm, numOfVectors);
     }
     else if (strcmp(goal,"jacobi")==0){
-        free(V);
+        free2DDoubleArray(V, numOfVectors);
     }
     else {
         free(eigenVals);
         free(eigenGaps);
-        free(vectors);
-        free(centroids);
-        free(wam);
-        free(ddg);
-        free(lnorm);
-        free(U);
-        free(clusters);
+        free2DDoubleArray(vectors, numOfVectors);
+        free2DDoubleArray(centroids, k);
+        free2DDoubleArray(wam, numOfVectors);
+        free2DDoubleArray(ddg, numOfVectors);
+        free2DDoubleArray(lnorm, numOfVectors);
+        free2DDoubleArray(U, numOfVectors);
+        free2DIntArray(clusters, k);
         free(clustersSizes);
         free(goal);
         free(eigenVectors);

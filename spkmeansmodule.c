@@ -4,12 +4,12 @@
 #include <assert.h>
 #include "spkmeans.h"
 
-static void freeMemory(void) {
-    free(vectors);
-    free(centroids);
-    free(clusters);
-    free(clustersSizes);
-}
+// static void freeMemory(void) {
+//     free2DDoubleArray(vectors, numOfVectors);
+//     free2DDoubleArray(centroids, numOfVectors);
+//     free2DIntArray(clusters, numOfVectors);
+//     free(clustersSizes);
+// }
 
 static PyObject* getTMAtrixAsPyObject(void){
     int i,j;
@@ -109,6 +109,18 @@ static PyObject* fit(PyObject *self, PyObject *args){
             updateCentroidValue();
             counter += 1;
         }
+
+        resCentroids = PyList_New(0);
+        for (i=0; i<k; i++){
+            tempCentroid = PyList_New(0);
+            for (j=0; j<dimension; j++){
+                PyList_Append(tempCentroid,PyFloat_FromDouble(centroids[i][j]));
+            }
+            PyList_Append(resCentroids, tempCentroid);
+        }
+      
+        freeMemory();
+        return resCentroids;
     }
     else if (strcmp(goal,"wam")==0){
         printMatrix(weightedAdjacencyMatrix(),numOfVectors,numOfVectors);
@@ -135,18 +147,7 @@ static PyObject* fit(PyObject *self, PyObject *args){
         freeMemory();
         Py_RETURN_NONE;
     }
-
-    resCentroids = PyList_New(0);
-    for (i=0; i<k; i++){
-        tempCentroid = PyList_New(0);
-        for (j=0; j<dimension; j++){
-            PyList_Append(tempCentroid,PyFloat_FromDouble(centroids[i][j]));
-        }
-        PyList_Append(resCentroids, tempCentroid);
-    }
-      
-    freeMemory();
-    return resCentroids;
+    Py_RETURN_NONE;
 }
 
 static PyMethodDef kmeansMethods[] = {

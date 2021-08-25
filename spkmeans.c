@@ -81,7 +81,6 @@ void readFile(FILE *file) {
     }
     while (fgets(buffer,1000,file) != NULL);
     free(vectorStr);
-    free2DDoubleArray(tmp, numOfVectors);
 }
 
 void assignUToVectors() {
@@ -518,7 +517,7 @@ double** jacobi(double **A, int toPrint){
     deepClone(APrime, A);
 
     do {        
-        maxValInd = maxOffDiagonalValue(A);        
+        maxValInd = maxOffDiagonalValue(A);      
         maxRow = maxValInd[0];
         maxCol = maxValInd[1];
         if (A[maxRow][maxCol] == 0) { /*matrix is already diagonal*/
@@ -531,14 +530,13 @@ double** jacobi(double **A, int toPrint){
 
         createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
         V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
-
         updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
         isConverged = checkConvergence(A, APrime); /*checks convergence*/
 
         /* A = APrime, deep clone */
         deepClone(A,APrime);
         count++; /*iterations count*/
-        }
+    }
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
 
     free(maxValInd);
@@ -651,7 +649,7 @@ void createUMatrix() {
 
 void free2DDoubleArray(double ** arr, int numOfElements) {
     /*frees memory of 2D array*/
-    int i, j;
+    int i;
     for (i = 0; i < numOfElements; i++) {
         free(arr[i]);
     }
@@ -660,7 +658,7 @@ void free2DDoubleArray(double ** arr, int numOfElements) {
 
 void free2DIntArray(int ** arr, int numOfElements) {
     /*frees memory of 2D array*/
-    int i, j;
+    int i;
     for (i = 0; i < numOfElements; i++) {
         free(arr[i]);
     }

@@ -220,6 +220,9 @@ void printMatrix(double** mat, int numOfRows, int numOfCols) {
     int i, j;
     for (i = 0; i < numOfRows; i++) {
         for (j = 0; j < numOfCols; j++) {
+            if ((mat[i][j]<0)&&(mat[i][j]>-0.00005)){
+                mat[i][j] = 0;
+            }
             printf("%.4f", mat[i][j]); /*format the floats precision to 4 digits*/
             if (j < numOfCols - 1) {
                 printf(",");
@@ -471,6 +474,9 @@ void printJacobi(double **A, double **V) {
     and prints them according to instructions*/
     int i,j;
     for (i = 0; i < numOfVectors; i++) {
+        if ((A[i][i]<0)&&(A[i][i]>-0.00005)){
+                A[i][i] = 0;
+        }
         printf("%.4f", A[i][i]); /*eigenvalues, Format to 4 digits*/
             if (i < numOfVectors - 1) {
                 printf(",");
@@ -479,6 +485,9 @@ void printJacobi(double **A, double **V) {
     printf("\n");
     for (i = 0; i < numOfVectors; i++) {
         for (j = 0; j < numOfVectors; j++) {
+            if ((V[j][i]<0)&&(V[j][i]>-0.00005)){
+                V[j][i] = 0;
+            }
             printf("%.4f", V[j][i]); /*Transpose V, Format to 4 digits*/
             if (j < numOfVectors - 1) {
                 printf(",");

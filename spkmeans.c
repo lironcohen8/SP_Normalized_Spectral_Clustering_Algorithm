@@ -201,8 +201,8 @@ void updateCentroidValue() {
             }    
             centroids[i][j] = newValue[j];
         }
+        free(newValue);
     }
-    free(newValue);
 }
 
 void deepClone(double **a, double** b){

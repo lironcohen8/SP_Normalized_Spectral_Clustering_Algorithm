@@ -70,6 +70,8 @@ def printResult(initialCentroidsIndices, centroids):
     for centroid in centroids:
         for i in range(len(centroid)):
             centroid[i] = np.round(centroid[i],4) #Format the floats precision to 4 digits 
+            if centroid[i]==0:
+                centroid[i] = pow(centroid[i],2)
 
     for i in range(len(centroids)):
         if i==(len(centroids)-1):

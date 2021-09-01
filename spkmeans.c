@@ -56,10 +56,10 @@ void readFile(FILE *file) {
     int j, sizeFull = 1;
     char *vectorStr, buffer[1000];
     double **tmp;
-    vectorStr = (char *)calloc(dimension, 100*sizeof(char));
-    errorAssert(vectorStr != NULL,0);
+
     vectors = (double **)malloc(1 * sizeof(*vectors));
     errorAssert(vectors != NULL,0);
+
     errorAssert(fgets(buffer,1000,file) != NULL,0);
     dimension = calcDimension(buffer);
     do {
@@ -80,20 +80,11 @@ void readFile(FILE *file) {
         numOfVectors++;
     }
     while (fgets(buffer,1000,file) != NULL);
-    free(vectorStr);
-    fclose(file);
 }
 
 void assignUToVectors() {
     /*put U vectors in vectors matrix for further calculations*/
-    int i;
     free2DDoubleArray(vectors, numOfVectors);
-    vectors = (double **)calloc(numOfVectors, k * sizeof(double));
-    errorAssert(vectors != NULL,0);
-    for (i = 0; i < numOfVectors; i++) {
-        vectors[i] = (double *)calloc(k, sizeof(double)); 
-        errorAssert(vectors[i] != NULL,0);
-    }
     vectors = U;
 }
 
@@ -145,11 +136,15 @@ void assignVectorToCluster() {
     the vector to the centroids cluster*/
     int i, newCentroidInd, clusterSize;
     int * cluster;
+
+    /*Clearing all cluster sizes (we do not want to remember what was here)*/
+    free(clustersSizes);
     clustersSizes = (int *)calloc(k, sizeof(int));
     errorAssert(clustersSizes != NULL,0);
 
     /*Clearing all clusters (we do not want to remember what was here)*/
     for (i = 0; i < k; i++) { 
+        free(clusters[i]);
         clusters[i] = (int *)calloc(numOfVectors, sizeof(int));
         errorAssert(clusters[i] != NULL,0);
     }
@@ -346,19 +341,15 @@ double** diagonalDegreeMatrix(int calcWam, int toPrint){
 double** laplacianNorm(){
     /*calculated the laplacian norm matrix*/
     int i,j;
+    double **tmp;
 
     wam = weightedAdjacencyMatrix(); /*calling wam*/
     ddg = diagonalDegreeMatrix(0,0); /*calling ddg without the need to calculate wam*/
-
-    lnorm = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorAssert(lnorm != NULL,0);
-    for (i = 0; i < numOfVectors; i++) {
-        lnorm[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorAssert(lnorm[i] != NULL,0);
-    }
-
+    
     /*multiplies according to formula*/
-    lnorm =  matrixMultiplication(matrixMultiplication(ddg, wam),ddg); 
+    tmp = matrixMultiplication(ddg, wam);
+    lnorm =  matrixMultiplication(tmp,ddg); 
+    free2DDoubleArray(tmp, numOfVectors);
 
     for (i = 0; i < numOfVectors; i++){
         for (j = 0; j < numOfVectors; j++){
@@ -506,28 +497,28 @@ void printJacobi(double **A, double **V) {
 
 double** jacobi(double **A, int toPrint){
     /*calculates jacobi iterations until convergence*/
-    int i, maxRow, maxCol, count=0, isConverged=0;
+    int i, maxRow, maxCol, count=0, isConverged=0, flag=2;
     int* maxValInd;
     double theta, t, c, s;
-    double **APrime, **P;
+    double **APrime, **P, **V1, **V2;
 
     APrime = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     errorAssert(APrime != NULL,0);
     P = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
     errorAssert(P != NULL,0);
-    V = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
-    errorAssert(V != NULL,0);
+    V1 = (double **)calloc(numOfVectors, numOfVectors*sizeof(double));
+    errorAssert(V1 != NULL,0);
     for (i = 0; i < numOfVectors; i++) {
         APrime[i] = (double *)calloc(numOfVectors, sizeof(double));
         errorAssert(APrime[i] != NULL,0);
         P[i] = (double *)calloc(numOfVectors, sizeof(double));
         errorAssert(P[i] != NULL,0);
-        V[i] = (double *)calloc(numOfVectors, sizeof(double));
-        errorAssert(V[i] != NULL,0);
+        V1[i] = (double *)calloc(numOfVectors, sizeof(double));
+        errorAssert(V1[i] != NULL,0);
     }
 
     for (i = 0; i < numOfVectors; i++) { 
-        V[i][i] = 1; /*init V as I matrix for מeutrality to multiplication*/
+        V1[i][i] = 1; /*init V as I matrix for מeutrality to multiplication*/
     }
     deepClone(APrime, A);
 
@@ -535,6 +526,8 @@ double** jacobi(double **A, int toPrint){
         maxValInd = maxOffDiagonalValue(A);      
         maxRow = maxValInd[0];
         maxCol = maxValInd[1];
+        free(maxValInd);
+
         if (A[maxRow][maxCol] == 0) { /*matrix is already diagonal*/
             break;
         }
@@ -544,7 +537,18 @@ double** jacobi(double **A, int toPrint){
         s = calcS(t, c);
 
         createRotationMatrixP(P, maxRow, maxCol, c, s); /*creating P rotation matrix*/
-        V = matrixMultiplication(V, P); /*updating eigenvectors matrix*/
+        
+        if (flag==2){
+            V2 = matrixMultiplication(V1, P); /*updating eigenvectors matrix*/
+            free2DDoubleArray(V1,numOfVectors);
+            flag=1;
+        }
+        else {
+            V1 = matrixMultiplication(V2, P); /*updating eigenvectors matrix*/
+            free2DDoubleArray(V2,numOfVectors);
+            flag=2;
+        }
+
         updateAPrime(A, APrime, maxRow, maxCol, c, s); /*updating A'*/
         isConverged = checkConvergence(A, APrime); /*checks convergence*/
 
@@ -553,8 +557,9 @@ double** jacobi(double **A, int toPrint){
         count++; /*iterations count*/
     }
     while ((isConverged==0)&&(count<100)); /*until convergence or 100 iterations*/
+    
+    V = flag==1 ? V2 : V1; /*Checks which Vn is the latest*/
 
-    free(maxValInd);
     free2DDoubleArray(P, numOfVectors);
     free2DDoubleArray(APrime, numOfVectors);
 
@@ -563,7 +568,7 @@ double** jacobi(double **A, int toPrint){
     }
     else { /*if goal was jacobi, only need to be printed*/
         printJacobi(A, V);
-        free2DDoubleArray(A, numOfVectors);
+        /*free2DDoubleArray(A, numOfVectors);*/
         return NULL;
     }
 }  
@@ -604,8 +609,10 @@ int eigengapHeuristic(){
     int i, limit, k=0;
     double maxGap = -1.0;
     double **A;
-    eigenVals = (double *)calloc(numOfVectors, sizeof(double));
+    
     A = jacobi(laplacianNorm(), 0); /*not for printing*/
+
+    eigenVals = (double *)calloc(numOfVectors, sizeof(double));
     for (i = 0; i < numOfVectors; i++) {
         eigenVals[i] = A[i][i]; /*eigenvals are on the diagonal line*/
     }
@@ -681,6 +688,7 @@ void free2DIntArray(int ** arr, int numOfElements) {
 }
 
 void freeMemory() {
+    free2DDoubleArray(vectors, numOfVectors);
     if (strcmp(goal,"wam")==0){
         free2DDoubleArray(wam, numOfVectors);
     }
@@ -699,11 +707,11 @@ void freeMemory() {
     else {
         free(eigenVals);
         free(eigenGaps);
-        free2DDoubleArray(vectors, numOfVectors);
         free2DDoubleArray(centroids, k);
         free2DDoubleArray(wam, numOfVectors);
         free2DDoubleArray(ddg, numOfVectors);
         /*free2DDoubleArray(lnorm, numOfVectors);*/
+        free2DDoubleArray(V, numOfVectors);
         /*free2DDoubleArray(U, numOfVectors);*/
         free2DIntArray(clusters, k);
         free(clustersSizes);
@@ -713,7 +721,7 @@ void freeMemory() {
 
 int main(int argc, char *argv[]) {
     FILE *file;
-    int counter = 1;
+    int i, counter = 1;
 
     errorAssert(argc == 4,1); /*Checks if we have the right amount of args*/ 
     
@@ -723,6 +731,7 @@ int main(int argc, char *argv[]) {
 
     file = fopen(argv[3],"r");
     readFile(file);
+    fclose(file);
 
     goal = argv[2];
     if (strcmp(goal,"spk")==0){
@@ -735,8 +744,16 @@ int main(int argc, char *argv[]) {
         createUMatrix();
         assignUToVectors();
         initCentroids();
+
         clusters = (int **)calloc(k, numOfVectors*sizeof(int));
         errorAssert(clusters != NULL,0);
+        for (i = 0; i < k; i++) { 
+            clusters[i] = (int *)calloc(numOfVectors, sizeof(int));
+            errorAssert(clusters[i] != NULL,0);
+        }
+        clustersSizes = (int *)calloc(k, sizeof(int));
+        errorAssert(clustersSizes != NULL,0);
+
         while ((counter <= max_iter) && (changes > 0)) {
             assignVectorToCluster();
             updateCentroidValue();

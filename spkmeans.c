@@ -172,15 +172,20 @@ double* calcCentroidForCluster(int clusterInd) {
     numOfVectorsInCluster = clustersSizes[clusterInd];
     cluster = clusters[clusterInd];
     
-    for (i = 0; i < dimension; i++) {
-        for (j = 0; j < numOfVectorsInCluster; j++) {
-            sumVector[i] += (vectors[cluster[j]])[i];
-        }
-    }
-
     if (numOfVectorsInCluster != 0) {
         for (i = 0; i < dimension; i++) {
+            for (j = 0; j < numOfVectorsInCluster; j++) {
+                sumVector[i] += (vectors[cluster[j]])[i];
+            }
+        }
+
+        for (i = 0; i < dimension; i++) {
             sumVector[i] /= numOfVectorsInCluster; /*Replace the sum with the average*/
+        }
+    }
+    else {
+        for (i = 0; i < dimension; i++) {
+            sumVector[i] = centroids[clusterInd][i];
         }
     }
     

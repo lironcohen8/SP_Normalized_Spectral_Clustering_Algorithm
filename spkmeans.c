@@ -66,6 +66,7 @@ void readFile(FILE *file) {
         if (numOfVectors == sizeFull) {
             sizeFull *= 2;
             tmp = realloc(vectors, sizeFull * sizeof(*vectors));
+            errorAssert(tmp != NULL,0);
             vectors = tmp;
         }
         vectorStr = strtok(buffer, ",");
